@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Custom Assembly-Descriptor für das Domino-Deployment als JAR.
+
+    Warum nicht der Standard-Ref "jar-with-dependencies"?
+    Bei packaging=war ist das Projekt-Artefakt das WAR — der Standard-Ref
+    würde das WAR entpackt in die JAR legen (Klassen unter WEB-INF/classes,
+    verschachtelte JARs unter WEB-INF/lib). Das wäre auf dem Domino-Java-
+    Classpath nicht ladbar. Dieser Descriptor legt stattdessen:
+
+      - die Projekt-Klassen (target/classes) in die JAR-Wurzel
+        (Default-Package: *.class direkt in der Wurzel, keine Unterverzeichnisse)
+      - die Runtime-Dependencies (jackson) entpackt daneben
+      - Servlet-API (provided) und Test-Dependencies bleiben aussen
+-->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/1.1.3"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
+    <id>domino-jar</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.outputDirectory}</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <!-- Alle Projekt-Klassen liegen im Default-Package
+                     (Root von target/classes, keine Unterverzeichnisse) -->
+                <include>*.class</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>/</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <unpack>true</unpack>
+            <scope>runtime</scope>
+            <excludes>
+                <exclude>**/module-info.class</exclude>
+                <exclude>META-INF/versions/**</exclude>
+                <exclude>META-INF/maven/**</exclude>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+            </excludes>
+        </dependencySet>
+    </dependencySets>
+</assembly>
