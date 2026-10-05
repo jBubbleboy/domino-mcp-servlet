@@ -70,7 +70,7 @@ Example:
 ```bash
 curl -X POST "http://<domino-host>/mcp/servlet" \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"tools/call","id":3,"params":{"name":"query_view","arguments":{"dbkey":"<dbkey>","viewname":"(All)","count":25}}}'
+  -d '{"jsonrpc":"2.0","method":"tools/call","id":3,"params":{"name":"query_view","arguments":{"rid":"<replicaID>","viewname":"(All)","count":25}}}'
 ```
 
 ### Configuration
@@ -223,7 +223,7 @@ Beispiel:
 ```bash
 curl -X POST "http://<domino-host>/mcp/servlet" \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"tools/call","id":3,"params":{"name":"query_view","arguments":{"dbkey":"<dbkey>","viewname":"(All)","count":25}}}'
+  -d '{"jsonrpc":"2.0","method":"tools/call","id":3,"params":{"name":"query_view","arguments":{"rid":"<replicaID>","viewname":"(All)","count":25}}}'
 ```
 
 ### Konfiguration
