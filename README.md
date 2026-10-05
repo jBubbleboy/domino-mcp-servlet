@@ -159,12 +159,13 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 
 ### Support & consulting
 
-This project is free to use (Apache License 2.0). If you need help with
-setup, integration, or custom extensions, support and consulting are
-available from the author.
+This project is free to use (Apache License 2.0).
 
-- Patreon: <link>
-- Contact: <email or website>
+- **Patreon:** optional support for the project; what each tier includes
+  is listed on the Patreon page. <link>
+- **Consulting & support:** individual engagements (setup, integration,
+  custom extensions) are arranged directly with the author.
+  Contact: <email or website>
 
 Domino, HCL and Lotus, and their logos, are trademarks of HCL Software, LLC.
 This project is not sponsored, endorsed, or supported by HCL.
@@ -324,12 +325,13 @@ Apache License 2.0 — siehe [LICENSE](LICENSE).
 
 ### Unterstützung & Beratung
 
-Das Projekt ist frei nutzbar (Apache License 2.0). Hilfe und Unterstützung
-für Installation, Integration und Anpassungen kann beim Autor bestellt
-werden.
+Das Projekt ist frei nutzbar (Apache License 2.0).
 
-- Patreon: <link>
-- Kontakt: <E-Mail oder Website>
+- **Patreon:** freiwillige Unterstützung des Projekts; was die einzelnen
+  Tiers enthalten, steht auf der Patreon-Seite. <link>
+- **Beratung & Support:** individuelle Aufträge (Installation, Integration,
+  Anpassungen) werden direkt mit dem Autor vereinbart.
+  Kontakt: <E-Mail oder Website>
 
 ---
 
