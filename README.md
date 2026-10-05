@@ -157,6 +157,15 @@ implementation note in `docs/per-user-authentication.md`.
 
 Apache License 2.0 — see [LICENSE](LICENSE).
 
+### Support & consulting
+
+This project is free to use (Apache License 2.0). If you need help with
+setup, integration, or custom extensions, support and consulting are
+available from the author.
+
+- Patreon: <link>
+- Contact: <email or website>
+
 Domino, HCL and Lotus, and their logos, are trademarks of HCL Software, LLC.
 This project is not sponsored, endorsed, or supported by HCL.
 
@@ -312,6 +321,15 @@ Durchreichung an den Web-Agent + Agent-seitige ACL-Prüfung) ist in
 ### Lizenz
 
 Apache License 2.0 — siehe [LICENSE](LICENSE).
+
+### Unterstützung & Beratung
+
+Das Projekt ist frei nutzbar (Apache License 2.0). Hilfe und Unterstützung
+für Installation, Integration und Anpassungen kann beim Autor bestellt
+werden.
+
+- Patreon: <link>
+- Kontakt: <E-Mail oder Website>
 
 ---
 
