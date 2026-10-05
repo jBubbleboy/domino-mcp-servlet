@@ -54,6 +54,12 @@ public class AgentStub extends HttpServlet {
     /** Roher JSON-Body des letzten Requests (String). */
     public volatile String lastRawBody;
 
+    /**
+     * Authorization-Header des letzten Requests (null, wenn nicht gesendet) —
+     * für Assertions der Credential-Weiterleitung (Per-User-Domino-Identität).
+     */
+    public volatile String lastAuthorization;
+
     private volatile Handler handler;
 
     public void setHandler(Handler h) {
@@ -71,6 +77,7 @@ public class AgentStub extends HttpServlet {
     }
 
     private void handle(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        lastAuthorization = req.getHeader("Authorization");
         lastRawBody = readBody(req);
         JsonNode body = null;
         if (lastRawBody != null && !lastRawBody.trim().isEmpty()) {

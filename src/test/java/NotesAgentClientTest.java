@@ -72,8 +72,38 @@ class NotesAgentClientTest {
         client.callTool(stubServer.agentBaseUrl(), 5000, "@NoArgs", null);
 
         JsonNode params = stubServer.stub().lastBody.get("params");
-        assertTrue(params.isObject(), "params muss ein JSON-Objekt sein");
-        assertTrue(params.isEmpty(), "leere Argumente => leeres Objekt {}");
+        assertTrue(params.isObject(), "params must be a JSON object");
+        assertTrue(params.isEmpty(), "empty arguments => empty object {}");
+    }
+
+    @Test
+    void callToolSendsAgentBodyAsAsciiSafeUnicode() throws Exception {
+        // Domino dekodiert den POST-Body mit der Server-Codepage (CP437/CP850),
+        // NICHT mit dem deklarierten charset (fuer rohe JSON-Bodies). Deshalb
+        // muss der Agent-Body ASCII-sicher sein: nicht-ASCII wird als Unicode-
+        // Escape (backslash-u-XXXX, Jackson ESCAPE_NON_ASCII) gesendet ->
+        // codepage-unabhaengig. Der Agent (dnWeb.unescapeJsonStr) dekodiert sie.
+        stubServer.stub().setHandler(
+                (method, b) -> AgentStub.Response.ok("{\"status\":\"ok\"}"));
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("task", "äöüß");
+
+        client.callTool(stubServer.agentBaseUrl(), 5000, "@Write", args);
+
+        String raw = stubServer.stub().lastRawBody;
+        // 1) Der Body muss rein-ASCII sein (kein Zeichen > 0x7F), sonst dekodiert
+        //    Domino ihn mit der falschen Codepage (Mojibake).
+        for (int i = 0; i < raw.length(); i++) {
+            assertTrue(raw.charAt(i) <= 0x7F,
+                    "Agent body must be pure ASCII (codepage-safe); found char "
+                            + (int) raw.charAt(i) + " in: " + raw);
+        }
+        // 2) Die (escaped) Werte muessen sich auf die Original-Werte
+        //    zurueckfuhren lassen (Jackson dekodiert die Escapes beim Parsen).
+        assertEquals("äöüß",
+                stubServer.stub().lastBody.get("params").get("task").asText(),
+                "escaped umlauts must round-trip to the original value");
     }
 
     @Test
@@ -84,7 +114,7 @@ class NotesAgentClientTest {
         NotesAgentException e = assertThrows(NotesAgentException.class,
                 () -> client.fetchToolList(stubServer.agentBaseUrl(), 5000));
         assertTrue(e.getMessage().contains("500"),
-                "Message muss den HTTP-Status enthalten: " + e.getMessage());
+                "Message must contain the HTTP status: " + e.getMessage());
     }
 
     @Test
@@ -101,7 +131,7 @@ class NotesAgentClientTest {
         long elapsed = System.currentTimeMillis() - start;
         assertTrue(e.getMessage().contains("Timeout"), "Message: " + e.getMessage());
         assertTrue(elapsed < 2500,
-                "muss abbrechen, bevor der Agent antwortet (nach " + elapsed + " ms)");
+                "must abort before the agent responds (after " + elapsed + " ms)");
     }
 
     @Test
@@ -114,7 +144,56 @@ class NotesAgentClientTest {
 
         NotesAgentException e = assertThrows(NotesAgentException.class,
                 () -> client.fetchToolList(deadUrl, 1000));
-        assertTrue(e.getMessage().contains("nicht erreichbar"),
+        assertTrue(e.getMessage().contains("unreachable"),
                 "Message: " + e.getMessage());
+    }
+
+    // ---------- Per-User-Domino-Identität: Authorization-Weiterleitung ----------
+
+    @Test
+    void clientWithAuthorizationHeaderForwardsItToAgent() throws Exception {
+        final String body = "{\"status\":\"ok\",\"tools\":[]}";
+        final String auth = "Basic dXNlcjpwYXNz";
+        stubServer.stub().setHandler((method, b) -> AgentStub.Response.ok(body));
+
+        NotesAgentClient authClient = new NotesAgentClient(auth);
+        String result = authClient.fetchToolList(stubServer.agentBaseUrl(), 5000);
+
+        assertEquals(body, result);
+        assertEquals(auth, stubServer.stub().lastAuthorization,
+                "The Authorization header must be forwarded to the agent 1:1");
+    }
+
+    @Test
+    void clientWithoutAuthorizationHeaderSendsNone() throws Exception {
+        stubServer.stub().setHandler(
+                (method, b) -> AgentStub.Response.ok("{\"status\":\"ok\"}"));
+
+        client.callTool(stubServer.agentBaseUrl(), 5000, "@NoArgs", null);
+
+        assertEquals(null, stubServer.stub().lastAuthorization,
+                "Without a set header, no Authorization header may be sent");
+    }
+
+    @Test
+    void everyOperationForwardsAuthorizationHeader() throws Exception {
+        final String auth = "Basic dXNlcjpwYXNz";
+        stubServer.stub().setHandler(
+                (method, b) -> AgentStub.Response.ok("{\"status\":\"ok\"}"));
+
+        NotesAgentClient authClient = new NotesAgentClient(auth);
+        String base = stubServer.agentBaseUrl();
+        authClient.fetchToolList(base, 5000);
+        assertEquals(auth, stubServer.stub().lastAuthorization);
+        authClient.callTool(base, 5000, "@View", null);
+        assertEquals(auth, stubServer.stub().lastAuthorization);
+        authClient.fetchResourceList(base, 5000);
+        assertEquals(auth, stubServer.stub().lastAuthorization);
+        authClient.readResource(base, 5000, "domino://x/(All)");
+        assertEquals(auth, stubServer.stub().lastAuthorization);
+        authClient.fetchPromptList(base, 5000);
+        assertEquals(auth, stubServer.stub().lastAuthorization);
+        authClient.getPrompt(base, 5000, "summarize", null);
+        assertEquals(auth, stubServer.stub().lastAuthorization);
     }
 }

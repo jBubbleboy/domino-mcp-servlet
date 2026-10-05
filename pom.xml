@@ -6,11 +6,11 @@
 
     <groupId>com.domai</groupId>
     <artifactId>domino-mcp-servlet</artifactId>
-    <version>2.0.0</version>
+    <version>2.3.0</version>
     <packaging>war</packaging>
 
     <name>Domino MCP Servlet</name>
-    <description>MCP-Gateway-Servlet für HCL Domino (Komponente des Domino MCP Toolkit)</description>
+    <description>MCP gateway servlet for HCL Domino (component of the Domino MCP Toolkit)</description>
 
     <url>https://github.com/jBubbleboy/domino-mcp-servlet</url>
 

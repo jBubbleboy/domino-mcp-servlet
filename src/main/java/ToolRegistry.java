@@ -98,8 +98,8 @@ public class ToolRegistry {
         } else if (root != null && root.isObject() && root.get("tools") != null && root.get("tools").isArray()) {
             toolsNode = root.get("tools");
         } else {
-            throw new IOException("Agent hat keine Tool-Liste zurueckgeliefert "
-                    + "(erwartet: {\"status\":\"ok\",\"tools\":[...]} oder [...])");
+            throw new IOException("Agent did not return a tool list "
+                    + "(expected: {\"status\":\"ok\",\"tools\":[...]} or [...])");
         }
 
         List<ToolDefinition> tools = new ArrayList<ToolDefinition>();

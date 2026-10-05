@@ -8,12 +8,13 @@
     <display-name>Domino MCP Servlet</display-name>
 
     <description>
-        MCP-Gateway-Servlet fuer HCL Domino (v2.0), Komponente des
-        Domino MCP Toolkit. Reines HTTP-Gateway zwischen LLM (MCP/JSON-RPC)
-        und Notes-Datenbank: Tool-Liste und Tool-Implementierungen liefert
-        der Web-Agent in der Notes-DB mcp_tools.nsf (Agent McpGateway,
-        OpenNTF-Release "Domino MCP Toolkit", s. AGENT_CONTRACT.md).
-        Konfigurationslos: Der Agent-Host wird aus dem Request abgeleitet.
+        MCP gateway servlet for HCL Domino (v2.0), component of the
+        Domino MCP Toolkit. Pure HTTP gateway between the LLM (MCP/JSON-RPC)
+        and the Notes database: the tool list and tool implementations are
+        provided by the web agent in the Notes DB mcp_tools.nsf (agent
+        McpGateway, OpenNTF release "Domino MCP Toolkit", see
+        AGENT_CONTRACT.md). Configuration-free: the agent host is derived
+        from the request.
     </description>
 
     <!-- Servlet Definition -->
@@ -23,8 +24,34 @@
              mit dem einfachen Namen DominoMcpServlet (kein Package). -->
         <servlet-class>DominoMcpServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
-        <!-- Kein Init-Param: Die Servlet ist konfigurationslos (Agent
-             mcp_tools.nsf/McpGateway auf dem eigenen Server). -->
+        <!-- Optionales Init-Param: Maximale LLM-Body-Größe in Bytes.
+             Default 10239999 = Server-HTTP-Limit (Content-Length ≥ 10240000
+             → HTTP 500) abzgl. Puffer. Wird zur Laufzeit von der vConfig
+             des Agents übersteuert (Feld MAX_PAYLOAD_BYTES, Form mMCPConfig
+             in mcp_tools.nsf, per op=env, 60-s-Cache; Präzedenz vConfig >
+             web.xml > Default). Wenn das Server-HTTP-Limit erhöht wird,
+             hier UND im Agent (FILECALL_MAX_BYTES) erhöhen.
+             Das Datei-Handover-Verzeichnis kommt NICHT aus einer
+             Konfiguration: die Servlet fragt es per op=env beim Agent ab
+             (Single Source of Truth). -->
+        <init-param>
+            <param-name>mcpMaxPayloadBytes</param-name>
+            <param-value>10239999</param-value>
+        </init-param>
+        <!-- Optionales Init-Param: Connect-/Read-Timeout je Agent-Call in
+             Millisekunden. Default 30000 (30 s). Wird zur Laufzeit von der
+             vConfig des Agents übersteuert (Feld AGENT_TIMEOUT_MS, Form
+             mMCPConfig in mcp_tools.nsf, per op=env, 60-s-Cache;
+             Präzedenz vConfig > web.xml > Default). Grösser bei langsamen
+             Agent-Aufrufen, z. B. get_design-Erst-Call (DXL-Export
+             größerer Masken). Kommentar-Block = auskommentiert; zum
+             Aktivieren die <!-- ... --> entfernen. -->
+        <!--
+        <init-param>
+            <param-name>mcpAgentTimeoutMs</param-name>
+            <param-value>60000</param-value>
+        </init-param>
+        -->
     </servlet>
 
     <!-- Servlet Mapping -->
@@ -50,7 +77,14 @@
         <role-name>domino-user</role-name>
     </security-role>
 
-    <!-- Konfiguration: keine — die Servlet arbeitet ohne externe Einstellungen. -->
+    <!-- Konfiguration: nur die optionalen Init-Params mcpMaxPayloadBytes
+         (Body-Guardrail, Default aus dem Messbericht) und mcpAgentTimeoutMs
+         (Agent-Timeout in ms, Default 30000); beide werden zur Laufzeit von
+         der vConfig des Agents übersteuert (Felder MAX_PAYLOAD_BYTES /
+         AGENT_TIMEOUT_MS in der Form mMCPConfig, per op=env, 60-s-Cache,
+         Präzedenz vConfig > web.xml > Default); der Agent-Host wird aus dem
+         Request abgeleitet, das Datei-Handover-Verzeichnis kommt per op=env
+         vom Agent. -->
 
     <!-- Error Handler (optional) -->
     <error-page>
