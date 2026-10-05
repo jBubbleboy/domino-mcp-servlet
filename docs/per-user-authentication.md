@@ -10,13 +10,6 @@
 > muss die User-ACLs (`AccessLevel`) daher selbst pro Ziel-DB prüfen. Agent-401/403 werden als
 > `MCP_1004` (`-32003`) gemeldet. Details siehe den englischen Abschnitt unten.
 
-| Working team | Repo / location | Status |
-|---|---|---|
-| Domino-10 administration | Domino server 192.168.x.x | open |
-| Servlet (Java) | this repo (`domino-mcp-servlet`) | open |
-| Web agent `McpGateway` (LotusScript) | Domino MCP Toolkit (OpenNTF) | open |
-| MCP client (opencode) | `~/.config/opencode/opencode.json` | open |
-
 ---
 
 ## 1. Goal and overall design
@@ -257,7 +250,7 @@ End Sub
 
 ### 4.2 AccessLevel check per target database
 
-For every `op` branch that addresses a target DB by `dbkey` (replica ID), **before delivering data**:
+For every `op` branch that addresses a target DB by `rid` (the replica ID), **before delivering data**:
 
 ```lotusscript
 Const ACL_NONE = 0
@@ -302,7 +295,7 @@ The denial lands as `{"status":"error","code":"MCP_ACL",...}` in the agent JSON 
 
 ### 4.4 Logging / forensics (optional, recommended)
 
-- Write a simple audit (date, user, tool, dbkey, result ok/denied) into its own DB in the toolkit — helps trace per-user usage. No PII in the log (no passwords/credentials — there are none here anyway, only usernames).
+- Write a simple audit (date, user, tool, `rid`, result ok/denied) into its own DB in the toolkit. It helps trace per-user usage. The log holds no passwords or credentials, only usernames.
 
 ---
 
