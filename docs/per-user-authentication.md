@@ -214,88 +214,32 @@ private void sendAgentError(HttpServletResponse resp, JsonNode id, IOException e
 
 ---
 
-## 4. Web agent `McpGateway` (LotusScript, Domino MCP Toolkit)
+## 4. Web agent `McpGateway` (interface requirements)
 
-**Core problem:** The web agent runs under the **server ID** and can therefore read/write everything. `Session.UserName` is only an informational field — without an agent-side check, no per-user separation applies.
+The agent implementation is part of the Domino MCP Toolkit (OpenNTF); this section only fixes the interface the servlet expects from it.
 
-### 4.1 Basic skeleton
+The web agent runs under the server ID and therefore has server-level access to everything. `Session.UserName` is only an informational field: unless the agent checks the calling user's Domino ACLs itself, the per-user separation is not effective.
 
-At the start of the agent (or in a central sub that every `op` branch goes through):
+### 4.1 Requirements
 
-```lotusscript
-Sub CheckAuthenticated(ErrOut As Boolean)
-    Dim s As New NotesSession
-    Dim userName As String
+- Every operation that addresses a target database by `rid` (replica ID) must check the user's access level on that database before delivering data.
+- On denial, the agent prints nothing except the error JSON.
+- If `Session.UserName` is `Anonymous` or empty, the agent rejects the request with the error format from 4.3.
 
-    userName = Trim(s.UserName)
+### 4.2 Minimum access level per operation
 
-    ' Defensive: after the mcp_tools.nsf ACL change (2.2), Anonymous is no
-    ' longer expected, but it is explicitly rejected.
-    If userName = "Anonymous" Or userName = "" Then
-        Print {"{"status":"error","code":"MCP_AUTH","message":"No authenticated user"}`}
-        ErrOut = True
-        Exit Sub
-    End If
-
-    ' The user must be a Reader on mcp_tools.nsf (otherwise the HTTP task
-    ' would have already returned 401 — defense in depth).
-    Dim levelMain As Long
-    levelMain = s.AccessLevel("", "mcp_tools.nsf", userName)
-    If levelMain < 2 Then   ' 2 = Reader
-        Print {"{"status":"error","code":"MCP_AUTH","message":"No reader access to mcp_tools.nsf"}`}
-        ErrOut = True
-    End If
-End Sub
-```
-
-### 4.2 AccessLevel check per target database
-
-For every `op` branch that addresses a target DB by `rid` (the replica ID), **before delivering data**:
-
-```lotusscript
-Const ACL_NONE = 0
-Const ACL_DEPOSITOR = 1
-Const ACL_READER = 2
-Const ACL_AUTHOR = 3
-Const ACL_EDITOR = 4
-
-' minLevel: read tools -> ACL_READER, write tools -> ACL_AUTHOR
-Sub CheckTargetAccess(db As NotesDatabase, minLevel As Long, ErrOut As Boolean)
-    Dim s As New NotesSession
-    Dim userName As String
-    Dim level As Long
-
-    userName = Trim(s.UserName)
-    ' server "" = local server; filePath from the already resolved
-    ' replica ID -> file resolution (already used in the toolkit for the
-    ' DB open — hook in there, don't reinvent it).
-    level = s.AccessLevel("", db.FilePath, userName)
-
-    If level < minLevel Then
-        Print {"{"status":"error","code":"MCP_ACL","message":"Access to the database was denied (access level too low)"}
-        ErrOut = True
-    End If
-End Sub
-```
-
-**Important:** The check must run **before** the `Print` of the data and, on denial, print NOTHING (except the error JSON). The denied DB must not be opened/printed.
-
-### 4.3 Level matrix per operation
-
-| Operation | Tools | minLevel |
+| Operation | Tools | Minimum level |
 |---|---|---|
-| `list` | (tool metadata from `mcp_tools.nsf`) | — (Reader on `mcp_tools.nsf` is enough, see 4.1) |
-| Read DB metadata | `list_databases`, `list_views`, `list_forms` | `ACL_READER` on the target DB |
-| Read document/view | `query_view`, `read_document` | `ACL_READER` |
-| Read resource/prompt | `resread`, `promptget` | `ACL_READER` (or as defined in the toolkit) |
-| Create document | `create_document` | `ACL_AUTHOR` |
-| Update document | `update_document` | `ACL_AUTHOR` |
+| Tool metadata | `list` (metadata from `mcp_tools.nsf`) | Reader on `mcp_tools.nsf` |
+| Read DB metadata | `list_databases`, `list_views`, `list_forms` | Reader on the target DB |
+| Read document/view | `query_view`, `read_document` | Reader |
+| Read resource/prompt | `resread`, `promptget` | Reader |
+| Create document | `create_document` | Author |
+| Update document | `update_document` | Author |
 
-The denial lands as `{"status":"error","code":"MCP_ACL",...}` in the agent JSON → the servlet wraps it as an MCP tool result with `isError: true` (existing behavior, no servlet change needed).
+### 4.3 Error format
 
-### 4.4 Logging / forensics (optional, recommended)
-
-- Write a simple audit (date, user, tool, `rid`, result ok/denied) into its own DB in the toolkit. It helps trace per-user usage. The log holds no passwords or credentials, only usernames.
+The agent reports denials as JSON with `status: "error"` and the code `MCP_AUTH` (no authenticated user) or `MCP_ACL` (access level on the target database too low). The servlet forwards such a result as an MCP tool result with `isError: true`. HTTP 401/403 of the internal agent call are mapped to `MCP_1004` (-32003), see 3.3.
 
 ---
 
