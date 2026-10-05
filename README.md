@@ -157,6 +157,9 @@ implementation note in `docs/per-user-authentication.md`.
 
 Apache License 2.0 — see [LICENSE](LICENSE).
 
+Domino, HCL and Lotus, and their logos, are trademarks of HCL Software, LLC.
+This project is not sponsored, endorsed, or supported by HCL.
+
 ---
 
 ## Deutsch
@@ -312,5 +315,6 @@ Apache License 2.0 — siehe [LICENSE](LICENSE).
 
 ---
 
-Domino, HCL und Lotus sind Marken von HCL Software, LLC.
-Dieses Projekt ist nicht von HCL gesponsert, genehmigt oder unterstützt.
+Domino, HCL und Lotus sowie deren Logos sind Marken oder eingetragene
+Marken von HCL Software, LLC. Dieses Projekt ist nicht von HCL gesponsert,
+genehmigt oder unterstützt.
