@@ -297,33 +297,4 @@ The file is currently `644` (world-readable) and already contains LLM API keys. 
 | Spoofing: anonymous + foreign `Authorization` header | The servlet gate (`getRemoteUser() == null` → no forwarding) prevents an anonymous client from using foreign credentials against the internal agent call. |
 | Password reset on Domino | Client configs must be updated (per affected user). |
 
----
 
-## 8. Verification checklist (end-to-end)
-
-**A. Local (this repo)**
-
-- [ ] `mvn clean package` green (Java 8, all tests)
-- [ ] New tests: header forwarding, gate (anonymous), 401 → `MCP_1004`
-
-**B. Domino admin (localhost)**
-
-- [ ] Server document: Basic-Auth enabled, directory DB set
-- [ ] `mcp_tools.nsf` ACL: Anonymous removed, MCP users with Reader
-- [ ] Dedicated test ID `mcp_test` with Reader on exactly one test DB
-- [ ] `tell http restart`
-- [ ] The `curl` matrix from section 2.4
-
-**C. Agent (toolkit)**
-
-- [ ] `Session.UserName` visible in a test tool (e.g. temporarily in the result JSON)
-- [ ] `Anonymous` rejection tested
-- [ ] `MCP_ACL` denial tested for a DB without rights
-- [ ] Write tools require `ACL_AUTHOR`
-
-**D. Client (opencode)**
-
-- [ ] `opencode.json` with `headers.Authorization`, `chmod 600`
-- [ ] `domino_list_databases` returns only DBs visible to the config user
-- [ ] `domino_query_view` on a DB without rights → clean `MCP_ACL` error
-- [ ] A second client with different credentials → different visibility
