@@ -222,7 +222,7 @@ class DominoMcpServletTest {
         JsonNode result = root.get("result");
         assertEquals("2025-03-26", result.get("protocolVersion").asText());
         assertEquals("Domino", result.get("serverInfo").get("name").asText());
-        assertEquals("2.3.0", result.get("serverInfo").get("version").asText());
+        assertEquals("2.4.0", result.get("serverInfo").get("version").asText());
         assertFalse(result.has("resultType"),
                 "Legacy result must not contain a resultType field");
         assertNotNull(result.get("capabilities").get("tools"));
@@ -480,7 +480,9 @@ class DominoMcpServletTest {
      * resources/read-Antwort als {@code resource_link}-Content-Item
      * referenziert wurde, darf gelesen werden (Hub-Ressource schaltet
      * ausgeblendete Ressourcen frei). Beliebige andere URIs bleiben mit
-     * -32602 abgewiesen. Läuft auf einer frischen Servlet (frische Registry),
+     * -32602 abgewiesen. v2.4.0: Das {@code resource_link}-Item selbst
+     * wird dem Client nicht mitgeschickt (Filter), der Unlock bleibt.
+     * Läuft auf einer frischen Servlet (frische Registry),
      * weil der reslist-Cache der geteilten Servlet sonst die frische
      * Agent-Handler-Antwort verdecken würde.
      */
@@ -527,14 +529,17 @@ class DominoMcpServletTest {
         try {
             String url = startServletWithAgent();
 
-            // 1) Hub ist gelistet => Read erlaubt; resource_link wird 1:1 durchgereicht.
+            // 1) Hub ist gelistet => Read erlaubt; resource_link wird dem
+            //    Client NICHT mitgeschickt (v2.4.0), das Text-Item (Index)
+            //    kommt an; der Unlock bleibt wirksam (Schritt 2).
             Resp r1 = post(url, "{\"jsonrpc\":\"2.0\",\"method\":\"resources/read\","
                     + "\"params\":{\"uri\":\"" + hubUri + "\"},\"id\":201}");
             assertEquals(200, r1.status, r1.body);
             JsonNode c1 = parse(r1).get("result").get("contents");
-            assertEquals(2, c1.size());
-            assertEquals("resource_link", c1.get(1).get("type").asText());
-            assertEquals(hiddenUri, c1.get(1).get("uri").asText());
+            assertEquals(1, c1.size());
+            assertEquals(hubUri, c1.get(0).get("uri").asText());
+            assertEquals("text/markdown", c1.get(0).get("mimeType").asText());
+            assertFalse(c1.get(0).has("type"));
 
             // 2) Ausgeblendete URI ist nicht gelistet, aber per Link referenziert => Read erlaubt.
             Resp r2 = post(url, "{\"jsonrpc\":\"2.0\",\"method\":\"resources/read\","

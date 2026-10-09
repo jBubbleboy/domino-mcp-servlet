@@ -109,10 +109,20 @@ import java.util.Map;
  * {@code resources/list} ausgeblendet sind (Agent-Feld {@code hidden}),
  * bleiben über die Hub-Resource erreichbar: Die Hub-Antwort trägt
  * {@code resource_link}-Content-Items (MCP 2025-06-18 {@code ResourceLink}),
- * die die Servlet durchreicht und deren URIs sie — nur für die Dauer der
- * Cache-TTL — für {@code resources/read} freischaltet. Beliebige nicht
+ * deren URIs die Servlet — nur für die Dauer der Cache-TTL — für
+ * {@code resources/read} freischaltet. Beliebige nicht
  * gelistete und nicht referenzierte URIs bleiben mit {@code -32602}
  * abgewiesen.</p>
+ *
+ * <p><b>Resource-Link-Filter (v2.4.0):</b> Die {@code resource_link}-Items
+ * selbst werden aus der Client-Antwort ({@code contents}) <b>vor der
+ * Weiterreichung entfernt</b>; der Whitelist-Unlock (v2.3.0) erfolgt
+ * davor und bleibt unverändert. Begründung: MCP-Clients mit strenger
+ * Schema-Prüfung der {@code resources/read}-Antwort (z. B. opencode)
+ * lehnen die gesamte Antwort ab, wenn {@code resource_link}-Items
+ * enthalten sind (Zod: {@code invalid_union} auf {@code contents}).
+ * Der Client erhält somit ein reines Text-Item (Markdown-Index), die
+ * referenzierten URIs sind wie bisher für die Cache-TTL lesbar.</p>
  *
  * <p>Unterstützte MCP-Methoden:</p>
  * <ul>
@@ -136,7 +146,9 @@ import java.util.Map;
  *       ({@code TOOLS_CACHE_TTL_MS}, Default 60 s) als
  *       {@code resource_link}-Content-Item in einer
  *       {@code resources/read}-Antwort referenziert wurden
- *       (v2.3.0, Hub-Ressourcen mit ausgeblendeten Ressourcen).</li>
+ *       (v2.3.0, Hub-Ressourcen mit ausgeblendeten Ressourcen). Die
+       {@code resource_link}-Items selbst werden dem Client nicht
+       mitgeschickt (v2.4.0, Filter vor der Weiterreichung).</li>
  *   <li>{@code prompts/list} — Prompt-Liste, dynamisch aus der Notes-DB
  *       (geliefert vom Agent, in der Servlet mit TTL gecacht)</li>
  *   <li>{@code prompts/get} — Prompt-Name + Argumente werden an den Agent
@@ -195,7 +207,7 @@ public class DominoMcpServlet extends HttpServlet {
      *  Init-Parameter {@code mcpServerName} und - mit höherer Präzedenz - über
      *  das vConfig-Feld SERVER_NAME per op=env, s. refreshEnvConfig. */
     static final String SERVER_NAME_DEFAULT = "Domino";
-    static final String SERVER_VERSION = "2.3.0";
+    static final String SERVER_VERSION = "2.4.0";
     static final String DEFAULT_PROTOCOL_VERSION = "2025-06-18";
 
     /** Modern-Ära (MCP 2026-07-28, stateless) — unterstützte Modern-Versionen. */
@@ -951,13 +963,39 @@ public class DominoMcpServlet extends HttpServlet {
         resourceRegistry.addLinkedUris(contents, TOOLS_CACHE_TTL_MS);
 
         ObjectNode result = mapper.createObjectNode();
-        result.set("contents", (contents != null && contents.isArray())
-                ? contents : mapper.createArrayNode());
+        // v2.4.0: resource_link-Items werden dem Client nicht mitgeschickt
+        // (strikte MCP-Clients lehnen solche Antworten ab); der Unlock
+        // erfolgt oben, vor dem Filter.
+        result.set("contents", filterResourceLinks(contents));
         if (modern) {
             sendModernResult(resp, id, result, true);
         } else {
             sendResult(resp, id, result);
         }
+    }
+
+    /**
+     * v2.4.0: Entfernt {@code resource_link}-Content-Items aus einer
+     * {@code resources/read}-Antwort, bevor sie an den Client geht.
+     * Alle anderen Items (Text/Blob, bzw. Items ohne {@code type}-Feld)
+     * werden unverändert durchgereicht. Kein Array => leeres Array
+     * (verhält sich wie die frühere Fallback-Logik).
+     */
+    ArrayNode filterResourceLinks(JsonNode contents) {
+        ArrayNode out = mapper.createArrayNode();
+        if (contents != null && contents.isArray()) {
+            for (JsonNode item : contents) {
+                if (item == null || !item.isObject()) {
+                    continue;
+                }
+                JsonNode type = item.get("type");
+                if (type != null && "resource_link".equals(type.asText())) {
+                    continue;
+                }
+                out.add(item.deepCopy());
+            }
+        }
+        return out;
     }
 
     // ---------- Prompt-Handler ----------

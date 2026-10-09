@@ -217,7 +217,7 @@ class DominoMcpServletModernTest {
         assertNotNull(result.get("capabilities").get("prompts"));
         JsonNode serverInfo = result.get("_meta").get("io.modelcontextprotocol/serverInfo");
         assertEquals("Domino", serverInfo.get("name").asText());
-        assertEquals("2.3.0", serverInfo.get("version").asText());
+        assertEquals("2.4.0", serverInfo.get("version").asText());
         assertEquals(DominoMcpServlet.TOOLS_CACHE_TTL_MS, result.get("ttlMs").asLong());
         assertEquals("private", result.get("cacheScope").asText());
     }

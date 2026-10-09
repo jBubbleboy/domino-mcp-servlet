@@ -34,11 +34,11 @@ Content-Type: application/json
 
 | Method | Behavior |
 |---|---|
-| `initialize` | Legacy handshake (2025-06-18); serverInfo `Domino` (configurable via `mcpServerName` init-param / vConfig `SERVER_NAME`) v`2.3.0` |
+| `initialize` | Legacy handshake (2025-06-18); serverInfo `Domino` (configurable via `mcpServerName` init-param / vConfig `SERVER_NAME`) v`2.4.0` |
 | `server/discover` | Modern (2026-07-28): supported versions, capabilities, server identity |
 | `tools/list` | Tool definitions from the agent (cached 60 s) |
 | `tools/call` | Forwarded to the agent; its JSON is returned as the MCP tool result |
-| `resources/list` / `resources/read` | Forwarded to the agent (cached 60 s); URIs referenced as `resource_link` in a read result are accepted for `resources/read` for the cache TTL (v2.3.0) |
+| `resources/list` / `resources/read` | Forwarded to the agent (cached 60 s); URIs referenced as `resource_link` in a read result are accepted for `resources/read` for the cache TTL (v2.3.0). The `resource_link` items themselves are filtered out of the client response before forwarding (v2.4.0) — strict MCP clients (e.g. opencode) reject `resources/read` responses containing `resource_link` items; the unlock is applied before the filter and stays effective |
 | `prompts/list` / `prompts/get` | Forwarded to the agent (cached 60 s) |
 | `notifications/*` | Acknowledged with 202, no body |
 
@@ -125,7 +125,7 @@ Output:
 
 | Component | Version |
 |---|---|
-| Domino MCP Servlet (this repo) | 2.3.0 |
+| Domino MCP Servlet (this repo) | 2.4.0 |
 | Domino MCP Toolkit (OpenNTF) | see release |
 | MCP protocol versions | `2026-07-28` (Modern), `2025-06-18` (Legacy) |
 
@@ -201,11 +201,11 @@ Content-Type: application/json
 
 | Methode | Verhalten |
 |---|---|
-| `initialize` | Legacy-Handshake (2025-06-18); serverInfo `Domino` (configurable via `mcpServerName` init-param / vConfig `SERVER_NAME`) v`2.3.0` |
+| `initialize` | Legacy-Handshake (2025-06-18); serverInfo `Domino` (configurable via `mcpServerName` init-param / vConfig `SERVER_NAME`) v`2.4.0` |
 | `server/discover` | Modern (2026-07-28): unterstützte Versionen, Capabilities, Server-Identität |
 | `tools/list` | Tool-Definitionen vom Agent (60 s gecacht) |
 | `tools/call` | Weiterleitung an den Agent; dessen JSON wird als MCP-Tool-Result zurückgegeben |
-| `resources/list` / `resources/read` | Weiterleitung an den Agent (60 s gecacht); per `resource_link` in einer Read-Antwort referenzierte URIs werden für `resources/read` für die Cache-TTL freigegeben (v2.3.0) |
+| `resources/list` / `resources/read` | Weiterleitung an den Agent (60 s gecacht); per `resource_link` in einer Read-Antwort referenzierte URIs werden für `resources/read` für die Cache-TTL freigegeben (v2.3.0). Die `resource_link`-Items selbst werden vor der Weiterreichung aus der Client-Antwort gefiltert (v2.4.0) — strikte MCP-Clients (z. B. opencode) lehnen `resources/read`-Antworten mit `resource_link`-Items ab; der Unlock erfolgt vor dem Filter und bleibt wirksam |
 | `prompts/list` / `prompts/get` | Weiterleitung an den Agent (60 s gecacht) |
 | `notifications/*` | 202 quittiert, ohne Body |
 
@@ -290,7 +290,7 @@ Ergebnis:
 
 | Komponente | Version |
 |---|---|
-| Domino MCP Servlet (dieses Repo) | 2.3.0 |
+| Domino MCP Servlet (dieses Repo) | 2.4.0 |
 | Domino MCP Toolkit (OpenNTF) | siehe Release |
 | MCP-Protokollversionen | `2026-07-28` (Modern), `2025-06-18` (Legacy) |
 

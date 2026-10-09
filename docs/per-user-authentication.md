@@ -209,7 +209,7 @@ private void sendAgentError(HttpServletResponse resp, JsonNode id, IOException e
 
 ### 3.5 Versioning & deployment
 
-- `pom.xml` + `SERVER_VERSION`: this feature shipped as **2.2.0** (new feature, no breaking change for legacy clients — without credentials the servlet behaves as before: an anonymous agent call that then fails at the `mcp_tools.nsf` ACL); the current release is **2.3.0** (further features, see README).
+- `pom.xml` + `SERVER_VERSION`: this feature shipped as **2.2.0** (new feature, no breaking change for legacy clients — without credentials the servlet behaves as before: an anonymous agent call that then fails at the `mcp_tools.nsf` ACL); the current release is **2.4.0** (further features, see README).
 - Build: `./build.sh`; copy the WAR to `<domino>/data/java/`; `tell http restart`.
 
 ---
