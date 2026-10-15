@@ -113,7 +113,7 @@ Output:
 ### Deployment on HCL Domino
 
 1. Copy the WAR (or JAR + `web.xml`) to the Java classpath directory configured in the server document, e.g. `<domino>/data/servlet/` — only **one** servlet definition per server (WAR **or** JAR)
-2. Server document (Administration Client → Servers → *CN=Server* → "Java" tab):
+2. Server document (Administration Client → Servers → *CN=Server* → "Internet Protocols" tab → "Domino Web Server" → "Java Servlets" section):
    - ☑ check **Java servlet support**
    - **Java servlet classpath:** e.g. `servlet` (relative to the Domino data directory; the JAR/WAR must be placed in this directory — the path is freely configurable)
    - **Java servlet path:** `/servlet`
@@ -277,7 +277,7 @@ Ergebnis:
 ### Deployment auf HCL Domino
 
 1. WAR (bzw. JAR + `web.xml`) ins im Serverdokument konfigurierte Java-Classpath-Verzeichnis kopieren, z. B. `<domino>/data/servlet/` — nur **eine** Servlet-Definition je Server (WAR **oder** JAR)
-2. Serverdokument (Verwaltungskunde → Server → *CN=Server* → Tab „Java"):
+2. Serverdokument (Verwaltungskunde → Server → *CN=Server* → Tab „Internetprotokolle" → „Domino-Web-Server" → Abschnitt „Java-Servlets"):
    - ☑ **Java-Servlet-Support** aktivieren
    - **Java-Servlet-Classpath:** z. B. `servlet` (relativ zum Domino-Data-Verzeichnis; die JAR/WAR muss in diesem Verzeichnis abgelegt sein — der Pfad ist frei konfigurierbar)
    - **Java-Servlet-Pfad:** `/servlet`
