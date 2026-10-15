@@ -105,7 +105,7 @@ tell http restart
 
 ### 2.4 Verification (admin level)
 
-Verified live (2026-10-15, reference deployment `192.168.1.103`: Basic-Auth
+Verified live (2026-10-15, reference deployment `192.168.x.x`: Basic-Auth
 enabled via the default Internet Site, WebRealm `pwd` → `names.nsf`,
 `mcp_tools.nsf` ACL without Anonymous/Everyone, user with Reader):
 
