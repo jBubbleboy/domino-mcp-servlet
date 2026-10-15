@@ -3,13 +3,6 @@
 **Status:** Design & implementation document (as of 2026-09-15)
 **Goal:** Each MCP client retains its own Domino identity; data queries run with the Domino ACL rights of the calling user.
 
-> **Deutsch (Kurzfassung):** Jeder MCP-Client behält seine eigene Domino-Identität. Domino
-> authentifiziert (Basic-Auth im HTTP-Task); die Servlet leitet nur den vom Domino-Task
-> validierten `Authorization`-Header an den internen Agent-Call weiter — und nur dann, wenn
-> `getRemoteUser()` gesetzt ist (Anti-Spoofing). Der Web-Agent läuft unter der Server-ID und
-> muss die User-ACLs (`AccessLevel`) daher selbst pro Ziel-DB prüfen. Agent-401/403 werden als
-> `MCP_1004` (`-32003`) gemeldet. Details siehe den englischen Abschnitt unten.
-
 ---
 
 ## 1. Goal and overall design
