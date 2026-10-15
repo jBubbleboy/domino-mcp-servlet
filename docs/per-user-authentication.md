@@ -16,7 +16,8 @@ MCP client (e.g. opencode)
    ▼
 Domino HTTP task                          ← AUTHENTICATION (before the servlet)
    │  • validates Basic-Auth against the directory database
-   │  • invalid/missing credentials + protected resource → HTTP 401
+   │  • invalid credentials → 401 or the Domino HTML login page (HTTP 200,
+   │    depending on the server's HTTP-authentication settings)
    │  • success → the user is known to the servlet (getRemoteUser())
    ▼
 DominoMcpServlet (Java, pure gateway)
@@ -37,7 +38,7 @@ McpGateway web agent (LotusScript)
 1. **Domino authenticates, the servlet passes through.** The servlet implements no auth logic of its own; it only passes the already-validated `Authorization` header from the Domino HTTP task to the internal agent call.
 2. **The web agent is the real data protection line.** Web agents run under the server ID and therefore have server access to everything. Without an agent-side `AccessLevel` check, the per-user separation is not effective.
 3. **Two enforcement points (defense in depth):**
-   - Servlet gate: unauthenticated external request → internal agent call without credentials → `mcp_tools.nsf` ACL blocks Anonymous → 401.
+    - Servlet gate: unauthenticated external request → internal agent call without credentials → `mcp_tools.nsf` ACL blocks Anonymous (401 or HTML login page) → the agent answers `MCP_1003`/`MCP_1004`.
    - Agent ACL check: the user's AccessLevel is checked per target DB.
 
 ### 1.3 Known limitations (accepted)
@@ -91,7 +92,7 @@ tell http restart
 ### 2.2 ACL of `mcp_tools.nsf`
 
 - Remove **Anonymous** and **Everyone** from all access levels (or set to "None").
-- Effect: the internal agent call without validated credentials is answered with **401** by the HTTP task; the agent does not run.
+- Effect: the internal agent call without validated credentials is rejected by the HTTP task (**401**, or the Domino **HTML login page** with HTTP 200 depending on the server settings); the agent does not deliver data.
 - The MCP users (or their dedicated IDs) need **Reader** on `mcp_tools.nsf` (to read the tool list) — otherwise 401 as well.
 
 ### 2.3 Dedicated Domino IDs for MCP access
@@ -102,22 +103,35 @@ tell http restart
 
 ### 2.4 Verification (admin level)
 
+Verified live (2026-10-15, reference deployment `192.168.1.103`: Basic-Auth
+enabled via the default Internet Site, WebRealm `pwd` → `names.nsf`,
+`mcp_tools.nsf` ACL without Anonymous/Everyone, user with Reader):
+
 ```bash
-# Without credentials: servlet reachable (anonymous), the internal agent call must return 401
+# Without credentials: servlet reachable (anonymous), the internal agent call
+# is answered with the Domino HTML login page, so the agent cannot parse JSON:
 curl -i -X POST http://192.168.x.x/servlet/DominoMcpServlet \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
-# Expected: HTTP 200 + JSON-RPC error (MCP_1003 / MCP_1004, see 3.3) — NO tools
+# Observed: HTTP 200 + JSON-RPC error MCP_1003 "Notes agent unreachable"
+# (data: Unexpected character '<' — the HTML login page) — NO tools.
+# MCP_1004 (-32003, see 3.3) only appears when the internal call returns a
+# clean HTTP 401/403.
 
-# With credentials:
+# With credentials (Domino name + Internet password of the Person document):
 curl -i -u 'mcp_user:mypass' -X POST http://192.168.x.x/servlet/DominoMcpServlet \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
-# Expected: HTTP 200 + {"result":{"tools":[...]}}
+# Observed: HTTP 200 + {"result":{"tools":[...]}} — proves the full chain:
+# the HTTP task validates Basic-Auth (getRemoteUser() set), the servlet gate
+# forwards the Authorization header, the agent runs with the user's ACL rights.
 
 # Wrong credentials:
 curl -i -u 'mcp_user:WRONG' -X POST ...
-# Expected: raw HTTP 401 from the Domino HTTP task (the servlet is not executed)
+# Observed: HTTP 200 + the Domino HTML login page (/names.nsf?Login) —
+# Domino's default behavior (the servlet is not executed). A raw HTTP 401 is
+# only returned if the server is configured to answer 401 for invalid
+# Basic auth — check the HTTP authentication settings of your server release.
 ```
 
 ---
@@ -283,7 +297,7 @@ chmod 600 ~/.config/opencode/opencode.json
 The file is currently `644` (world-readable) and already contains LLM API keys. With Domino credentials this becomes more critical.
 
 - Each MCP user uses **their own** config with **their own** Domino credentials.
-- OAuth auto-detection plays no role here (the endpoint does not return a 401 + `WWW-Authenticate` challenge in the MCP sense; the raw HTTP 401 for wrong credentials is reported by the client as a connection error).
+- OAuth auto-detection plays no role here (the endpoint does not return a 401 + `WWW-Authenticate` challenge in the MCP sense; wrong credentials yield the Domino HTML login page (HTTP 200), which the client reports as a connection error because it cannot parse the response as JSON-RPC).
 
 ---
 
@@ -291,8 +305,8 @@ The file is currently `644` (world-readable) and already contains LLM API keys. 
 
 | Scenario | Result |
 |---|---|
-| No `Authorization` header | Request reaches the servlet (anonymous), gate → internal call without credentials → `mcp_tools.nsf` ACL 401 → JSON-RPC error `MCP_1004` (-32003) |
-| Wrong credentials | **Raw HTTP 401** from the Domino HTTP task, the servlet is not executed |
+| No `Authorization` header | Request reaches the servlet (anonymous), gate → internal call without credentials → `mcp_tools.nsf` ACL blocks it (HTML login page) → JSON-RPC error `MCP_1003` (observed 2026-10-15; `MCP_1004` only on a clean 401/403) |
+| Wrong credentials | **HTTP 200 + Domino HTML login page** (or 401 if so configured) from the HTTP task, the servlet is not executed |
 | Correct credentials, but no Reader on `mcp_tools.nsf` | Internal call 401/403 → `MCP_1004` |
 | Correct credentials + Reader on target DB | Data is delivered |
 | Correct credentials, but no Reader/Author on target DB | Agent JSON `MCP_ACL` → MCP result `isError: true` |
