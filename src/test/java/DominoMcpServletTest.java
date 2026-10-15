@@ -151,11 +151,11 @@ class DominoMcpServletTest {
         Server s = new Server(0);
         ServletContextHandler ctx = new ServletContextHandler();
         ctx.setContextPath("/");
-        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/mcp/servlet");
+        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/servlet/DominoMcpServlet");
         s.setHandler(ctx);
         s.start();
         SERVERS.add(s);
-        return s.getURI().resolve("/mcp/servlet").toString();
+        return s.getURI().resolve("/servlet/DominoMcpServlet").toString();
     }
 
     /** Startet die Servlet + den Agent-Stub in einem Jetty. */
@@ -163,12 +163,12 @@ class DominoMcpServletTest {
         Server s = new Server(0);
         ServletContextHandler ctx = new ServletContextHandler();
         ctx.setContextPath("/");
-        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/mcp/servlet");
+        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/servlet/DominoMcpServlet");
         ctx.addServlet(new ServletHolder(agentStub), "/mcp_tools.nsf/McpGateway");
         s.setHandler(ctx);
         s.start();
         SERVERS.add(s);
-        return s.getURI().resolve("/mcp/servlet").toString();
+        return s.getURI().resolve("/servlet/DominoMcpServlet").toString();
     }
 
     static class Resp {
@@ -620,12 +620,12 @@ class DominoMcpServletTest {
         Server s = new Server(0);
         ServletContextHandler ctx = new ServletContextHandler();
         ctx.setContextPath("/");
-        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/mcp/servlet");
+        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/servlet/DominoMcpServlet");
         ctx.addServlet(new ServletHolder(rejectedStub), "/mcp_tools.nsf/McpGateway");
         s.setHandler(ctx);
         s.start();
         SERVERS.add(s);
-        return s.getURI().resolve("/mcp/servlet").toString();
+        return s.getURI().resolve("/servlet/DominoMcpServlet").toString();
     }
 
     @Test
@@ -672,12 +672,12 @@ class DominoMcpServletTest {
         Server s = new Server(0);
         ServletContextHandler c = new ServletContextHandler();
         c.setContextPath("/");
-        c.addServlet(new ServletHolder(ctx.servlet), "/mcp/servlet");
+        c.addServlet(new ServletHolder(ctx.servlet), "/servlet/DominoMcpServlet");
         c.addServlet(new ServletHolder(stub), "/mcp_tools.nsf/McpGateway");
         s.setHandler(c);
         s.start();
         SERVERS.add(s);
-        ctx.url = s.getURI().resolve("/mcp/servlet").toString();
+        ctx.url = s.getURI().resolve("/servlet/DominoMcpServlet").toString();
         return ctx;
     }
 

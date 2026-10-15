@@ -54,18 +54,39 @@ McpGateway web agent (LotusScript)
 > The steps are written generically for any Domino-10 server; IP addresses and
 > sample data (usernames, replica IDs) are shown only for the reference deployment.
 
-### 2.1 Enable Basic Authentication
+### 2.1 Enable Basic Authentication (name-and-password)
 
-1. Open the **Domino server document**.
-2. **Configuration → Internet → Web Authentication** (the exact label may vary slightly per Domino-10 patch):
-   - Check: **Basic Authentication**
-   - **Authentication database:** the directory database configured on the respective server (the server directory, e.g. `names.nsf` or its replica).
-     - The MCP toolkit is server-agnostic: which directory DB to enter here is decided per Domino server — it is the directory database that this server fundamentally works with.
-3. **Keep anonymous access enabled globally** (other existing web resources must keep working). The protection for the MCP endpoint comes from the `mcp_tools.nsf` ACL (2.2) and the servlet gate (3.2).
-4. Save the server document; **restart the HTTP task**:
-   ```
-   tell http restart
-   ```
+Per the HCL procedure, three steps are required (see the HCL reference at the
+end of this section):
+
+1. **Enable name-and-password authentication** — either in the **server
+   document** (Ports → Internet Ports → Web → HTTP: "Name & password" = Yes
+   for TCP and, if applicable, SSL) or, if the server uses Internet Sites, in
+   the **Internet Site document** (Security → TCP/SSL Authentication →
+   Name & password = Yes). A **WebRealm** document in the directory decides
+   which directory database the authentication realm is validated against
+   (reference deployment: realm `pwd` → `names.nsf`).
+   - The MCP toolkit is server-agnostic: which directory DB is used is
+     decided per Domino server — it is the directory database that this
+     server fundamentally works with.
+2. **Person documents with Internet passwords** in the Domino directory: the
+   **Internet password** of the Person document is what Basic-Auth validates
+   against (not necessarily the Notes ID password). Set it for each MCP user.
+3. **Database ACLs**: remove **Anonymous**/**Everyone** from `mcp_tools.nsf`
+   and grant the users Reader (2.2).
+
+**Keep anonymous access enabled globally** (other existing web resources must
+keep working). The protection for the MCP endpoint comes from the
+`mcp_tools.nsf` ACL (2.2) and the servlet gate (3.2).
+
+After saving: **restart the HTTP task**:
+
+```
+tell http restart
+```
+
+> HCL reference: [Setting up basic name-and-password authentication —
+> Domino 10.0.1 Administrator Help](https://help.hcl-software.com/domino/10.0.1/admin/conf_settingupbasicnameandpasswordauthentication_t.html)
 
 ### 2.2 ACL of `mcp_tools.nsf`
 
@@ -204,6 +225,7 @@ private void sendAgentError(HttpServletResponse resp, JsonNode id, IOException e
 
 - `pom.xml` + `SERVER_VERSION`: this feature shipped as **2.2.0** (new feature, no breaking change for legacy clients — without credentials the servlet behaves as before: an anonymous agent call that then fails at the `mcp_tools.nsf` ACL); the current release is **2.4.0** (further features, see README).
 - Build: `./build.sh`; copy the WAR to the Java classpath directory configured in the server document (e.g. `<domino>/data/servlet/`); enable **Java servlet support** there (tab "Internet Protocols" → "Domino Web Server" → "Java Servlets"); `tell http restart`.
+- URL mapping: default `/servlet/DominoMcpServlet`. **WAR:** the mapping comes from the WAR's `web.xml` — a change requires editing `web.xml` and a **new build**. **JAR:** the admin chooses the URL freely in the `domino-web.xml` registration — **no build required** (the servlet is URL-agnostic and derives the agent URL from the incoming request).
 
 ---
 
@@ -219,9 +241,9 @@ The web agent runs under the server ID and therefore has server-level access to 
 - Operations that do not address a target database (registry reads, released folders) are gated by the `mcp_tools.nsf` ACL alone.
 - Operations that execute server-side code (`run_agent`, `run_console`) are not bounded by the user's DB access level — the agent runs under the server ID. Their only guard is the whitelist configured in the `mcp_tools.nsf` registry (allowed agents per DB, allowed console commands).
 - On denial, the agent prints nothing except the error JSON.
-- If `Session.UserName` is `Anonymous` or empty, the agent rejects the request with the error format from 4.3.
+- If `Session.UserName` is `Anonymous` or empty, the agent rejects the request with the error format from 4.2.
 
-### 4.3 Error format
+### 4.2 Error format
 
 The agent reports denials as JSON with `status: "error"` and the code `MCP_AUTH` (no authenticated user) or `MCP_ACL` (access level on the target database too low). The servlet forwards such a result as an MCP tool result with `isError: true`. HTTP 401/403 of the internal agent call are mapped to `MCP_1004` (-32003), see 3.3.
 
@@ -243,6 +265,14 @@ The agent reports denials as JSON with `status: "error"` and the code `MCP_AUTH`
 ```
 
 (`base64("<domino_user>:<domino_pass>")` — the sample value is made up.)
+
+Generate the token once (the user part is the Domino name — full DN, short
+name, or e-mail address from the Person document):
+
+```bash
+echo -n '<domino_user>:<domino_pass>' | base64
+# → Authorization: Basic <output>
+```
 
 **Immediate action:**
 

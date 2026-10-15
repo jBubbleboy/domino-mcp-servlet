@@ -24,9 +24,18 @@ Notes API, and simply forwards everything to the LotusScript web agent
 ### MCP endpoint
 
 ```
-POST /mcp/servlet
+POST /servlet/DominoMcpServlet
 Content-Type: application/json
 ```
+
+> **URL note:** `/servlet/DominoMcpServlet` is the recommended default mapping.
+> The servlet is URL-agnostic (it derives the agent URL from the incoming
+> request), so the admin may choose any other mapping:
+> - **WAR deployment:** the mapping is taken from the WAR's
+>   `WEB-INF/web.xml` (shipped with the default). Changing it requires
+>   editing `web.xml` and **rebuilding the WAR**.
+> - **JAR deployment:** the URL is freely chosen by the admin in the
+>   `domino-web.xml` servlet registration — **no rebuild required**.
 
 | Method | Behavior |
 |---|---|
@@ -64,7 +73,7 @@ require:
 Example:
 
 ```bash
-curl -X POST "http://<domino-host>/mcp/servlet" \
+curl -X POST "http://<domino-host>/servlet/DominoMcpServlet" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/call","id":3,"params":{"name":"query_view","arguments":{"rid":"<replicaID>","viewname":"(All)","count":25}}}'
 ```
@@ -114,7 +123,7 @@ Output:
    - **Java servlet classpath:** e.g. `servlet` (relative to the Domino data directory; the JAR/WAR must be placed in this directory — the path is freely configurable)
    - **Java servlet path:** `/servlet`
 3. Restart the HTTP task: `tell http restart`
-4. Test the endpoint: `POST /mcp/servlet` with `initialize` (see above)
+4. Test the endpoint: `POST /servlet/DominoMcpServlet` with `initialize` (see above)
 
 ### Versions & compatibility
 

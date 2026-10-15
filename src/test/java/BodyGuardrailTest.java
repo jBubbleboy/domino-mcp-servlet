@@ -41,11 +41,11 @@ class BodyGuardrailTest {
         if (maxPayloadBytes > 0) {
             holder.setInitParameter("mcpMaxPayloadBytes", String.valueOf(maxPayloadBytes));
         }
-        ctx.addServlet(holder, "/mcp/servlet");
+        ctx.addServlet(holder, "/servlet/DominoMcpServlet");
         s.setHandler(ctx);
         s.start();
         servers.add(s);
-        return s.getURI().resolve("/mcp/servlet").toString();
+        return s.getURI().resolve("/servlet/DominoMcpServlet").toString();
     }
 
     private JsonNode postAndParse(String url, String body) throws Exception {
@@ -86,7 +86,7 @@ class BodyGuardrailTest {
         try (Socket sock = new Socket(u.getHost(), u.getPort())) {
             OutputStream out = sock.getOutputStream();
             StringBuilder req = new StringBuilder();
-            req.append("POST /mcp/servlet HTTP/1.1\r\n");
+            req.append("POST /servlet/DominoMcpServlet HTTP/1.1\r\n");
             req.append("Host: ").append(u.getHost()).append(':').append(u.getPort()).append("\r\n");
             req.append("Content-Type: application/json; charset=utf-8\r\n");
             // Kompletter Body: ~570 Bytes (Padding). Content-Length deklariert
@@ -170,12 +170,12 @@ class BodyGuardrailTest {
         Server s = new Server(0);
         ServletContextHandler ctx = new ServletContextHandler();
         ctx.setContextPath("/");
-        ctx.addServlet(new ServletHolder(servlet), "/mcp/servlet");
+        ctx.addServlet(new ServletHolder(servlet), "/servlet/DominoMcpServlet");
         ctx.addServlet(new ServletHolder(stub), "/mcp_tools.nsf/McpGateway");
         s.setHandler(ctx);
         s.start();
         servers.add(s);
-        String url = s.getURI().resolve("/mcp/servlet").toString();
+        String url = s.getURI().resolve("/servlet/DominoMcpServlet").toString();
         FileCallEnv.invalidate();
         try {
             // Erster Request (klein): triggert den Env-Refresh.

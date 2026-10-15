@@ -63,12 +63,12 @@ class DominoMcpServletModernTest {
         Server s = new Server(0);
         ServletContextHandler ctx = new ServletContextHandler();
         ctx.setContextPath("/");
-        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/mcp/servlet");
+        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/servlet/DominoMcpServlet");
         ctx.addServlet(new ServletHolder(agentStub), "/mcp_tools.nsf/McpGateway");
         s.setHandler(ctx);
         s.start();
         SERVERS.add(s);
-        return s.getURI().resolve("/mcp/servlet").toString();
+        return s.getURI().resolve("/servlet/DominoMcpServlet").toString();
     }
 
     // ---------- Test-Helfer ----------
@@ -375,12 +375,12 @@ class DominoMcpServletModernTest {
         Server s = new Server(0);
         ServletContextHandler ctx = new ServletContextHandler();
         ctx.setContextPath("/");
-        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/mcp/servlet");
+        ctx.addServlet(new ServletHolder(new DominoMcpServlet()), "/servlet/DominoMcpServlet");
         ctx.addServlet(new ServletHolder(stub), "/mcp_tools.nsf/McpGateway");
         s.setHandler(ctx);
         s.start();
         SERVERS.add(s);
-        String url = s.getURI().resolve("/mcp/servlet").toString();
+        String url = s.getURI().resolve("/servlet/DominoMcpServlet").toString();
 
         String encodedName = "=?base64?"
                 + Base64.getEncoder().encodeToString("Ähnlich".getBytes(StandardCharsets.UTF_8))

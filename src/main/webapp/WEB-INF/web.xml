@@ -57,14 +57,14 @@
     <!-- Servlet Mapping -->
     <servlet-mapping>
         <servlet-name>DominoMcpServlet</servlet-name>
-        <url-pattern>/mcp/servlet</url-pattern>
+        <url-pattern>/servlet/DominoMcpServlet</url-pattern>
     </servlet-mapping>
 
     <!-- Security Constraints (optional - für Produktion anpassen) -->
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>MCP Endpoint</web-resource-name>
-            <url-pattern>/mcp/servlet</url-pattern>
+            <url-pattern>/servlet/DominoMcpServlet</url-pattern>
             <http-method>POST</http-method>
         </web-resource-collection>
         <auth-constraint>
