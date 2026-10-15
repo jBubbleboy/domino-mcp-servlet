@@ -107,17 +107,16 @@ Output:
 
 | Artifact | Deployment |
 |---|---|
-| `target/domino-mcp-servlet.war` | copy to `<domino>/data/java/` |
-| `target/domino-mcp-servlet.jar` | Alternative: JAR **and** `src/main/webapp/WEB-INF/web.xml` on the Domino Java classpath |
+| `target/domino-mcp-servlet.war` | copy to `<domino>/data/servlet/` |
+| `target/domino-mcp-servlet.jar` | Alternative: JAR **and** `src/main/webapp/WEB-INF/web.xml` into the Domino Java classpath directory |
 
 ### Deployment on HCL Domino
 
-1. Copy the WAR (or JAR + `web.xml`) to `<domino>/data/java/` — only **one** servlet definition per server (WAR **or** JAR)
-2. `notes.ini`:
-   ```ini
-   HTTPJavaEnabled=1
-   HTTPClassPath=<domino>/data/java
-   ```
+1. Copy the WAR (or JAR + `web.xml`) to the Java classpath directory configured in the server document, e.g. `<domino>/data/servlet/` — only **one** servlet definition per server (WAR **or** JAR)
+2. Server document (Administration Client → Servers → *CN=Server* → "Java" tab):
+   - ☑ check **Java servlet support**
+   - **Java servlet classpath:** e.g. `servlet` (relative to the Domino data directory; the JAR/WAR must be placed in this directory — the path is freely configurable)
+   - **Java servlet path:** `/servlet`
 3. Restart the HTTP task: `tell http restart`
 4. Test the endpoint: `POST /mcp/servlet` with `initialize` (see above)
 
@@ -272,17 +271,16 @@ Ergebnis:
 
 | Artifact | Deployment |
 |---|---|
-| `target/domino-mcp-servlet.war` | nach `<domino>/data/java/` kopieren |
-| `target/domino-mcp-servlet.jar` | Alternative: JAR **und** `src/main/webapp/WEB-INF/web.xml` in den Domino-Java-Classpath |
+| `target/domino-mcp-servlet.war` | nach `<domino>/data/servlet/` kopieren |
+| `target/domino-mcp-servlet.jar` | Alternative: JAR **und** `src/main/webapp/WEB-INF/web.xml` ins Domino-Java-Classpath-Verzeichnis |
 
 ### Deployment auf HCL Domino
 
-1. WAR (bzw. JAR + `web.xml`) nach `<domino>/data/java/` kopieren — nur **eine** Servlet-Definition je Server (WAR **oder** JAR)
-2. `notes.ini`:
-   ```ini
-   HTTPJavaEnabled=1
-   HTTPClassPath=<domino>/data/java
-   ```
+1. WAR (bzw. JAR + `web.xml`) ins im Serverdokument konfigurierte Java-Classpath-Verzeichnis kopieren, z. B. `<domino>/data/servlet/` — nur **eine** Servlet-Definition je Server (WAR **oder** JAR)
+2. Serverdokument (Verwaltungskunde → Server → *CN=Server* → Tab „Java"):
+   - ☑ **Java-Servlet-Support** aktivieren
+   - **Java-Servlet-Classpath:** z. B. `servlet` (relativ zum Domino-Data-Verzeichnis; die JAR/WAR muss in diesem Verzeichnis abgelegt sein — der Pfad ist frei konfigurierbar)
+   - **Java-Servlet-Pfad:** `/servlet`
 3. HTTP Task neu starten: `tell http restart`
 4. Endpoint testen: `POST /mcp/servlet` mit `initialize` (s. o.)
 

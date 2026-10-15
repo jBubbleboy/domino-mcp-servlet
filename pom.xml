@@ -215,7 +215,7 @@
                                 <configuration>
                                     <target>
                                          <copy file="${project.build.directory}/domino-mcp-servlet.war"
-                                              todir="/path/to/domino/data/java"/>
+                                              todir="/path/to/domino/data/servlet"/>
                                     </target>
                                 </configuration>
                             </execution>
