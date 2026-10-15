@@ -251,6 +251,15 @@ The agent implementation is part of the Domino MCP Toolkit (OpenNTF); this secti
 
 The web agent runs under the server ID and therefore has server-level access to everything. `Session.UserName` is only an informational field: unless the agent checks the calling user's Domino ACLs itself, the per-user separation is not effective.
 
+**Run as web user (alternative):** the agent option "Run as web user"
+(„Als Webbenutzer ausführen") is **not** set in the reference deployment
+(verified in the agent DXL: no web-user attribute). If you want the agent to
+run with the **calling user's rights** instead, check that option on the
+`McpGateway` agent: then Domino enforces the target database ACLs natively
+per request — but the user must hold direct access rights on every target
+database (metadata/registry operations then also run under the user, so the
+user still needs Reader on `mcp_tools.nsf`).
+
 ### 4.1 Requirements
 
 - Every operation that addresses a target database by `rid` (replica ID) must check the user's access level on that database before delivering data.
