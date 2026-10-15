@@ -216,19 +216,30 @@ The web agent runs under the server ID and therefore has server-level access to 
 ### 4.1 Requirements
 
 - Every operation that addresses a target database by `rid` (replica ID) must check the user's access level on that database before delivering data.
+- Operations that do not address a target database (registry reads, released folders) are gated by the `mcp_tools.nsf` ACL alone.
+- Operations that execute server-side code (`run_agent`, `run_console`) are not bounded by the user's DB access level — the agent runs under the server ID. Their only guard is the whitelist configured in the `mcp_tools.nsf` registry (allowed agents per DB, allowed console commands).
 - On denial, the agent prints nothing except the error JSON.
 - If `Session.UserName` is `Anonymous` or empty, the agent rejects the request with the error format from 4.3.
 
 ### 4.2 Minimum access level per operation
 
+Verified against the toolkit tool registry (`2. MCP\1. Tools`, form `mMCPTool`, 19 tools).
+
 | Operation | Tools | Minimum level |
 |---|---|---|
-| Tool metadata | `list` (metadata from `mcp_tools.nsf`) | Reader on `mcp_tools.nsf` |
-| Read DB metadata | `list_databases`, `list_views`, `list_forms` | Reader on the target DB |
-| Read document/view | `query_view`, `read_document` | Reader |
-| Read resource/prompt | `resread`, `promptget` | Reader |
-| Create document | `create_document` | Author |
-| Update document | `update_document` | Author |
+| Tool metadata (MCP `tools/list`) | registry of `mcp_tools.nsf` | Reader on `mcp_tools.nsf` |
+| Resource/prompt data (MCP `resources/*`, `prompts/*`) | registry of `mcp_tools.nsf` | Reader on `mcp_tools.nsf` |
+| Read registry (configured databases) | `list_databases` | Reader on `mcp_tools.nsf` |
+| Read DB metadata | `list_views`, `list_forms`, `list_design`, `list_agents` | Reader on the target DB |
+| Read document/view | `query_view`, `search_documents`, `read_document`, `read_field` | Reader on the target DB |
+| Export design element | `get_design` | Reader on the target DB |
+| Create document | `create_document` | Author (or higher) on the target DB |
+| Update document | `update_document` | Editor on the target DB (Author: own documents only) |
+| Delete document | `delete_document` | Editor incl. delete right on the target DB (destructive) |
+| Import design | `import_design` | Designer (or Admin) on the target DB (destructive) |
+| Run agent | `run_agent` | agent whitelist per DB (registry); Editor+ on the target DB as defense in depth |
+| Run console command | `run_console` | console-command whitelist (registry); server-level operation, no per-DB ACL applies |
+| Read released folders/files | `list_dirs`, `list_dir`, `read_file` | Reader on `mcp_tools.nsf` (folders are released in the registry) |
 
 ### 4.3 Error format
 
