@@ -50,10 +50,12 @@ McpGateway web agent (LotusScript)
 
 ---
 
-## 2. Domino-10 administration (reference deployment: 192.168.x.x)
+## 2. Server administration (reference deployment: HCL Domino 10, 192.168.x.x)
 
-> The steps are written generically for any Domino-10 server; IP addresses and
-> sample data (usernames, replica IDs) are shown only for the reference deployment.
+> The HTTP servlet requires Java 8 (Java 1.8); HCL Domino 10 and later ship a
+> compatible JRE, so this is guaranteed on those versions. The steps are
+> written generically for any Domino-10+ server; IP addresses and sample
+> data (usernames, replica IDs) are shown only for the reference deployment.
 
 ### 2.1 Enable Basic Authentication (name-and-password)
 
