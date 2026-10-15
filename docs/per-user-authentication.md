@@ -221,26 +221,6 @@ The web agent runs under the server ID and therefore has server-level access to 
 - On denial, the agent prints nothing except the error JSON.
 - If `Session.UserName` is `Anonymous` or empty, the agent rejects the request with the error format from 4.3.
 
-### 4.2 Minimum access level per operation
-
-Verified against the toolkit tool registry (`2. MCP\1. Tools`, form `mMCPTool`, 19 tools).
-
-| Operation | Tools | Minimum level |
-|---|---|---|
-| Tool metadata (MCP `tools/list`) | registry of `mcp_tools.nsf` | Reader on `mcp_tools.nsf` |
-| Resource/prompt data (MCP `resources/*`, `prompts/*`) | registry of `mcp_tools.nsf` | Reader on `mcp_tools.nsf` |
-| Read registry (configured databases) | `list_databases` | Reader on `mcp_tools.nsf` |
-| Read DB metadata | `list_views`, `list_forms`, `list_design`, `list_agents` | Reader on the target DB |
-| Read document/view | `query_view`, `search_documents`, `read_document`, `read_field` | Reader on the target DB |
-| Export design element | `get_design` | Reader on the target DB |
-| Create document | `create_document` | Author (or higher) on the target DB |
-| Update document | `update_document` | Editor on the target DB (Author: own documents only) |
-| Delete document | `delete_document` | Editor incl. delete right on the target DB (destructive) |
-| Import design | `import_design` | Designer (or Admin) on the target DB (destructive) |
-| Run agent | `run_agent` | agent whitelist per DB (registry); Editor+ on the target DB as defense in depth |
-| Run console command | `run_console` | console-command whitelist (registry); server-level operation, no per-DB ACL applies |
-| Read released folders/files | `list_dirs`, `list_dir`, `read_file` | Reader on `mcp_tools.nsf` (folders are released in the registry) |
-
 ### 4.3 Error format
 
 The agent reports denials as JSON with `status: "error"` and the code `MCP_AUTH` (no authenticated user) or `MCP_ACL` (access level on the target database too low). The servlet forwards such a result as an MCP tool result with `isError: true`. HTTP 401/403 of the internal agent call are mapped to `MCP_1004` (-32003), see 3.3.
