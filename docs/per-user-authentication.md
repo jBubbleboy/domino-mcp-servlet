@@ -96,6 +96,7 @@ tell http restart
 - Remove **Anonymous** and **Everyone** from all access levels (or set to "None").
 - Effect: the internal agent call without validated credentials is rejected by the HTTP task (**401**, or the Domino **HTML login page** with HTTP 200 depending on the server settings); the agent does not deliver data.
 - The MCP users (or their dedicated IDs) need **Reader** on `mcp_tools.nsf` (to read the tool list) — otherwise 401 as well.
+- **The agent also writes to `mcp_tools.nsf`:** besides reading the tool list, `McpGateway` creates **log documents (`mLog`)** and **ContentManager documents (`mContentManager`)** in the MCP database. The identity executing the agent therefore needs at least **Editor** on the database for these writes — in the default mode the writes run under the server ID, with "Run as web user" (level 3 below) the invoker's own Editor level applies.
 
 Every request to `mcp_tools.nsf` involves **two separate questions**: which
 *caller* identity the HTTP task checks against the database ACL, and under which
