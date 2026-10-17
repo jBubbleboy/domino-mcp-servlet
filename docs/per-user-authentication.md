@@ -97,16 +97,21 @@ tell http restart
 - Effect: the internal agent call without validated credentials is rejected by the HTTP task (**401**, or the Domino **HTML login page** with HTTP 200 depending on the server settings); the agent does not deliver data.
 - The MCP users (or their dedicated IDs) need **Reader** on `mcp_tools.nsf` (to read the tool list) — otherwise 401 as well.
 
-The `mcp_tools.nsf` ACL is the first of **three identity levels** involved in
-every `McpGateway` request:
+Every request to `mcp_tools.nsf` involves **two separate questions**: which
+*caller* identity the HTTP task checks against the database ACL, and under which
+*effective user* the agent code itself runs. The `McpGateway` agent option
+"Run as web user" is what ties the two together. The three caller levels:
 
-| Level | Identity | When active | Role of the `mcp_tools.nsf` ACL / access rights |
-|---|---|---|---|
-| 1. **Anonymous** | no authenticated user | no (or invalid) Basic-Auth credentials | the authentication **gate**: the ACL must block Anonymous/Everyone, otherwise the agent answers unauthenticated calls |
-| 2. **Server ID** | the agent's code | default — web agents run under the server ID (reference deployment; the option "Run as web user" is **not** set) | the HTTP task checks the ACL against the *calling* user before the agent starts; the agent code itself then runs with server-ID authority — per-user separation on the *target* databases therefore still requires the agent-side AccessLevel checks (section 4) |
-| 3. **User ID** | the calling user | the `McpGateway` agent option **"Run as web user"** is checked | the agent runs under the calling user's ID: Domino enforces the *target-database* ACLs natively per request — the user must hold direct access rights on **every** target database, and still needs Reader on `mcp_tools.nsf` (metadata/registry operations then also run under the user) |
+| Caller level (checked against the `mcp_tools.nsf` ACL on every request) | Execution identity (effective user) of the agent code |
+|---|---|
+| 1. **Anonymous** — no or invalid Basic-Auth credentials | **Server ID** (agent signer) — same as level 2; `Session.UserName` = "Anonymous". The Anonymous/Everyone ACL row decides whether the call reaches the agent at all; if it is allowed, that access level (Reader/Editor/Designer, …) also bounds what anonymous callers can do on this database — a blocked row → 401 / HTML login page |
+| 2. **Authenticated user** — valid Basic-Auth credentials | **Server ID** (agent signer); `Session.UserName` = the calling user. The caller needs at least a non-None ACL level to reach the agent at all (Reader suffices — verified live, 2.4); the agent's own database operations then run under the signer's (server ID's) rights, so per-user separation on the *target* databases still requires the agent-side AccessLevel checks (section 4) |
+| 3. **User ID (invoker)** — the agent option **"Run as web user"** is checked | the **invoking user** (browser login name). Domino then checks the invoker's rights in the database ACL instead of the signer's, and the agent code runs with the invoker's access rights on all databases it touches — the target-database ACLs are enforced natively per request. An unauthenticated invoker runs the agent under **Anonymous** (i.e. with Anonymous' rights); the invoker must therefore hold direct access rights on **every** target database and on `mcp_tools.nsf` itself |
 
-See section 4 ("Run as web user (alternative)") for the trade-offs of level 3.
+Levels 1 and 2 differ only in whether the caller is authenticated — in both
+cases the agent code runs under the server ID. Only level 3 uses the calling
+user's access rights for the agent's own execution. See section 4 ("Run as web
+user (alternative)") for the trade-offs.
 
 ### 2.3 Dedicated Domino IDs for MCP access
 
