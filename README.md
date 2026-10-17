@@ -162,8 +162,7 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 This project is free to use (Apache License 2.0).
 
 - **GitHub Sponsors:** optional support for the project; what each tier
-  includes is listed on the
-  [GitHub Sponsors page](https://github.com/sponsors/jBubbleboy/domino-mcp-servlet).
+  includes is listed on the [GitHub Sponsors page](https://github.com/sponsors/jBubbleboy).
 - **Consulting & support:** individual engagements (setup, integration,
   custom extensions) are arranged directly with the author.
   Contact:
