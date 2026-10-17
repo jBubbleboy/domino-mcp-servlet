@@ -97,6 +97,17 @@ tell http restart
 - Effect: the internal agent call without validated credentials is rejected by the HTTP task (**401**, or the Domino **HTML login page** with HTTP 200 depending on the server settings); the agent does not deliver data.
 - The MCP users (or their dedicated IDs) need **Reader** on `mcp_tools.nsf` (to read the tool list) — otherwise 401 as well.
 
+The `mcp_tools.nsf` ACL is the first of **three identity levels** involved in
+every `McpGateway` request:
+
+| Level | Identity | When active | Role of the `mcp_tools.nsf` ACL / access rights |
+|---|---|---|---|
+| 1. **Anonymous** | no authenticated user | no (or invalid) Basic-Auth credentials | the authentication **gate**: the ACL must block Anonymous/Everyone, otherwise the agent answers unauthenticated calls |
+| 2. **Server ID** | the agent's code | default — web agents run under the server ID (reference deployment; the option "Run as web user" is **not** set) | the HTTP task checks the ACL against the *calling* user before the agent starts; the agent code itself then runs with server-ID authority — per-user separation on the *target* databases therefore still requires the agent-side AccessLevel checks (section 4) |
+| 3. **User ID** | the calling user | the `McpGateway` agent option **"Run as web user"** is checked | the agent runs under the calling user's ID: Domino enforces the *target-database* ACLs natively per request — the user must hold direct access rights on **every** target database, and still needs Reader on `mcp_tools.nsf` (metadata/registry operations then also run under the user) |
+
+See section 4 ("Run as web user (alternative)") for the trade-offs of level 3.
+
 ### 2.3 Dedicated Domino IDs for MCP access
 
 - Create a **separate ID** per MCP user (or per logical role) — never the server admin ID.
