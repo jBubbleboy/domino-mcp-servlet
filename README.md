@@ -151,7 +151,8 @@ determined by the tools configured in the Notes component.
 
 Per-user Domino authentication (Basic-Auth at the Domino-10 level +
 pass-through to the web agent + agent-side ACL check) is documented as an
-implementation note in `docs/per-user-authentication.md`.
+implementation note in
+[docs/per-user-authentication.md](https://github.com/jBubbleboy/domino-mcp-servlet/blob/main/docs/per-user-authentication.md).
 
 ### License
 
