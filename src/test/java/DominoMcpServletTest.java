@@ -843,4 +843,42 @@ class DominoMcpServletTest {
         when(authedWithoutHeader.getHeader("Authorization")).thenReturn(null);
         assertEquals(null, DominoMcpServlet.authForAgentCall(authedWithoutHeader));
     }
+
+    @Test
+    void agentBaseUrlWrapsIpv6HostInBrackets() throws Exception {
+        // Die Servlet-API liefert IPv6-Hosts ohne Brackets (Host-Header),
+        // die Agent-URL muss aber eine gueltige URL sein (java.net.URL in
+        // NotesAgentClient braucht die Brackets), sonst MCP_1003.
+        HttpServletRequest ipv6 = mock(HttpServletRequest.class);
+        when(ipv6.getScheme()).thenReturn("http");
+        when(ipv6.getServerName()).thenReturn("2a02:810a:9612:3d00:1d5b:3206:e27:7037");
+        when(ipv6.getServerPort()).thenReturn(80);
+        String url = DominoMcpServlet.agentBaseUrl(ipv6);
+        assertEquals("http://[2a02:810a:9612:3d00:1d5b:3206:e27:7037]/mcp_tools.nsf/McpGateway", url);
+        new URL(url); // muss parsbar sein (NotesAgentClient tut genau das)
+
+        HttpServletRequest ipv6NonDefaultPort = mock(HttpServletRequest.class);
+        when(ipv6NonDefaultPort.getScheme()).thenReturn("https");
+        when(ipv6NonDefaultPort.getServerName()).thenReturn("::1");
+        when(ipv6NonDefaultPort.getServerPort()).thenReturn(8443);
+        assertEquals("https://[::1]:8443/mcp_tools.nsf/McpGateway",
+                DominoMcpServlet.agentBaseUrl(ipv6NonDefaultPort));
+
+        // Defensive: Container, die den Host bereits gebracktet liefern,
+        // duerfen keine doppelten Brackets erzeugen.
+        HttpServletRequest ipv6Bracketed = mock(HttpServletRequest.class);
+        when(ipv6Bracketed.getScheme()).thenReturn("http");
+        when(ipv6Bracketed.getServerName()).thenReturn("[::1]");
+        when(ipv6Bracketed.getServerPort()).thenReturn(80);
+        assertEquals("http://[::1]/mcp_tools.nsf/McpGateway",
+                DominoMcpServlet.agentBaseUrl(ipv6Bracketed));
+
+        // Regressions-Guard: IPv4/DNS-Hosts (kein ':') bleiben unveraendert.
+        HttpServletRequest ipv4 = mock(HttpServletRequest.class);
+        when(ipv4.getScheme()).thenReturn("http");
+        when(ipv4.getServerName()).thenReturn("192.168.1.103");
+        when(ipv4.getServerPort()).thenReturn(80);
+        assertEquals("http://192.168.1.103/mcp_tools.nsf/McpGateway",
+                DominoMcpServlet.agentBaseUrl(ipv4));
+    }
 }

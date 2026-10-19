@@ -124,6 +124,12 @@ import java.util.Map;
  * Der Client erhält somit ein reines Text-Item (Markdown-Index), die
  * referenzierten URIs sind wie bisher für die Cache-TTL lesbar.</p>
  *
+ * <p><b>IPv6-Hosts (v2.4.1):</b> Bei Zugriffen über eine rohe IPv6-Adresse
+ * (Host-Header ohne Brackets) wurde die Agent-URL ohne {@code [ ]} um den
+ * Host gebildet (ungültige URL) → {@code -32001}/{@code MCP_1003} „Invalid
+ * agent URL". Der Host wird jetzt bei der Agent-URL-Komposition
+ * IPv6-konform gebracktet ({@link #hostForUrl(String)}).</p>
+ *
  * <p>Unterstützte MCP-Methoden:</p>
  * <ul>
  *   <li>{@code initialize} — Legacy-Protokoll-Handshake (serverInfo, capabilities)</li>
@@ -207,7 +213,7 @@ public class DominoMcpServlet extends HttpServlet {
      *  Init-Parameter {@code mcpServerName} und - mit höherer Präzedenz - über
      *  das vConfig-Feld SERVER_NAME per op=env, s. refreshEnvConfig. */
     static final String SERVER_NAME_DEFAULT = "Domino";
-    static final String SERVER_VERSION = "2.4.0";
+    static final String SERVER_VERSION = "2.4.1";
     static final String DEFAULT_PROTOCOL_VERSION = "2025-06-18";
 
     /** Modern-Ära (MCP 2026-07-28, stateless) — unterstützte Modern-Versionen. */
@@ -531,11 +537,13 @@ public class DominoMcpServlet extends HttpServlet {
     /**
      * Agent-Base-URL: immer der Server des einkommenden Requests
      * (Scheme + Host [+ Nicht-Standard-Port]), dahinter die festen
-     * {@code /mcp_tools.nsf/McpGateway} (ohne Query-String).
+     * {@code /mcp_tools.nsf/McpGateway} (ohne Query-String). IPv6-Hosts
+     * werden in {@code [ ]} gesetzt (die URL-Syntax verlangt das; die
+     * Servlet-API liefert Hosts ohne Brackets).
      */
     static String agentBaseUrl(HttpServletRequest req) {
         StringBuilder sb = new StringBuilder();
-        sb.append(req.getScheme()).append("://").append(req.getServerName());
+        sb.append(req.getScheme()).append("://").append(hostForUrl(req.getServerName()));
         int port = req.getServerPort();
         boolean defaultPort = ("http".equals(req.getScheme()) && port == 80)
                 || ("https".equals(req.getScheme()) && port == 443);
@@ -544,6 +552,23 @@ public class DominoMcpServlet extends HttpServlet {
         }
         sb.append('/').append(AGENT_DATABASE).append('/').append(AGENT_NAME);
         return sb.toString();
+    }
+
+    /**
+     * Host-Anteil einer URL: IPv6-Literal wird immer in {@code [ ]} gesetzt
+     * (URL-Syntax verlangt das; die Servlet-API liefert Hosts ohne Brackets,
+     * ein bereits gebracketer Host wird erst entbracktet, damit keine
+     * doppelten Brackets entstehen). Hosts ohne {@code :} (IPv4/DNS)
+     * bleiben unveraendert.
+     */
+    static String hostForUrl(String host) {
+        if (host.indexOf(':') < 0) {
+            return host;
+        }
+        if (host.startsWith("[") && host.endsWith("]")) {
+            host = host.substring(1, host.length() - 1);
+        }
+        return "[" + host + "]";
     }
 
     /**
