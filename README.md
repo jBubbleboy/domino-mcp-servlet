@@ -132,7 +132,7 @@ Output:
 
 | Component | Version |
 |---|---|
-| Domino MCP Servlet (this repo) | 2.4.0 |
+| Domino MCP Servlet (this repo) | 2.4.1 |
 | Domino MCP Toolkit (OpenNTF) | see release |
 | MCP protocol versions | `2026-07-28` (Modern), `2025-06-18` (Legacy) |
 

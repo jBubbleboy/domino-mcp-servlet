@@ -256,7 +256,7 @@ private void sendAgentError(HttpServletResponse resp, JsonNode id, IOException e
 
 ### 3.5 Versioning & deployment
 
-- `pom.xml` + `SERVER_VERSION`: this feature shipped as **2.2.0** (new feature, no breaking change for legacy clients — without credentials the servlet behaves as before: an anonymous agent call that then fails at the `mcp_tools.nsf` ACL); the current release is **2.4.0** (further features, see README).
+- `pom.xml` + `SERVER_VERSION`: this feature shipped as **2.2.0** (new feature, no breaking change for legacy clients — without credentials the servlet behaves as before: an anonymous agent call that then fails at the `mcp_tools.nsf` ACL); the current release is **2.4.1** (further features, see README).
 - Build: `./build.sh`; copy the WAR to the Java classpath directory configured in the server document (e.g. `<domino>/data/servlet/`); enable **Java servlet support** there (tab "Internet Protocols" → "Domino Web Server" → "Java Servlets"); `tell http restart`.
 - URL mapping: default `/servlet/DominoMcpServlet`. **WAR:** the mapping comes from the WAR's `web.xml` — a change requires editing `web.xml` and a **new build**. **JAR:** the servlet is addressed by its class name; any other URL can be registered as an alias via `servlets.properties` in the Domino data directory — **no build required** (the servlet is URL-agnostic and derives the agent URL from the incoming request).
 

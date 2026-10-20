@@ -222,7 +222,7 @@ class DominoMcpServletTest {
         JsonNode result = root.get("result");
         assertEquals("2025-03-26", result.get("protocolVersion").asText());
         assertEquals("Domino", result.get("serverInfo").get("name").asText());
-        assertEquals("2.4.0", result.get("serverInfo").get("version").asText());
+        assertEquals(DominoMcpServlet.SERVER_VERSION, result.get("serverInfo").get("version").asText());
         assertFalse(result.has("resultType"),
                 "Legacy result must not contain a resultType field");
         assertNotNull(result.get("capabilities").get("tools"));
