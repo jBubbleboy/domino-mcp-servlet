@@ -28,17 +28,18 @@ POST /servlet/DominoMcpServlet
 Content-Type: application/json
 ```
 
-> **URL note:** `/servlet/DominoMcpServlet` is the recommended default mapping.
-> The servlet is URL-agnostic (it derives the agent URL from the incoming
-> request), so the admin may choose any other mapping:
-> - **WAR deployment:** the mapping is taken from the WAR's
->   `WEB-INF/web.xml` (shipped with the default). Changing it requires
->   editing `web.xml` and **rebuilding the WAR**.
-> - **JAR deployment:** the servlet is addressed by its class name
->   (`/servlet/DominoMcpServlet` — default package); any other URL can be
+> **URL note:** `/servlet/DominoMcpServlet` is the recommended default
+> mapping. The servlet is URL-agnostic (it derives the agent URL from the
+> incoming request), so the admin may choose any other mapping:
+> - **JAR deployment (native, Domino Servlet Manager):** the servlet is
+>   addressed by its class name (default package); any other URL can be
 >   registered as an alias via `servlets.properties` in the Domino data
 >   directory (e.g. `servlet.Mcp.code=DominoMcpServlet`) — **no rebuild
 >   required**.
+> - **WAR deployment (only with *Third Party Servlet Support* + an external
+>   container such as WebSphere or Tomcat):** the mapping is taken from the
+>   WAR's `WEB-INF/web.xml` (shipped with the default). Changing it requires
+>   editing `web.xml` and **rebuilding the WAR**.
 
 | Method | Behavior |
 |---|---|
@@ -91,15 +92,16 @@ Minimal. The servlet derives the agent URL from the incoming request:
 
 Agent timeout: 30 s default; configurable via the vConfig field
 `AGENT_TIMEOUT_MS` (form `mMCPConfig` in `mcp_tools.nsf`, reported via
-`op=env`, 60 s cache — highest precedence) or the web.xml init-param
-`mcpAgentTimeoutMs` (ms). Body-size guardrail: vConfig field
-`MAX_PAYLOAD_BYTES` (default 5 242 880 = 5 MB) or the web.xml init-param
-`mcpMaxPayloadBytes` (fallback default 10 239 999 = measured server HTTP
-limit minus buffer). Precedence: vConfig > web.xml > built-in default;
-values are applied 1:1 (no clamping, no plausibility check); vConfig
-changes take effect after at most 60 s (env cache). Server identity:
-`serverInfo.name` defaults to `Domino`; configurable via the vConfig field
-`SERVER_NAME` (reported via `op=env`) or the web.xml init-param
+`op=env`, 60 s cache — highest precedence) or the servlet init-param
+`mcpAgentTimeoutMs` (ms; via `web.xml` in a WAR deployment, via
+`servlets.properties` `initArgs` in a native JAR deployment). Body-size
+guardrail: vConfig field `MAX_PAYLOAD_BYTES` (default 5 242 880 = 5 MB) or
+the servlet init-param `mcpMaxPayloadBytes` (fallback default 10 239 999 =
+measured server HTTP limit minus buffer). Precedence: vConfig > init-param
+> built-in default; values are applied 1:1 (no clamping, no plausibility
+check); vConfig changes take effect after at most 60 s (env cache). Server
+identity: `serverInfo.name` defaults to `Domino`; configurable via the
+vConfig field `SERVER_NAME` (reported via `op=env`) or the servlet init-param
 `mcpServerName`. Set it per Domino server to keep multiple servers
 distinguishable in the MCP client. Agent errors
 (`status: "error"`) are forwarded as an MCP result with `isError: true`.
@@ -115,18 +117,40 @@ Output:
 
 | Artifact | Deployment |
 |---|---|
-| `target/domino-mcp-servlet.war` | copy to `<domino>/data/servlet/` |
-| `target/domino-mcp-servlet.jar` | Alternative: the JAR **alone** (no `web.xml` needed) into the Domino Java classpath |
+| `target/domino-mcp-servlet.jar` | **Native Domino deployment** (Domino Servlet Manager): the JAR alone, no `web.xml` needed — into the Java servlet classpath |
+| `target/domino-mcp-servlet.war` | Only with **Third Party Servlet Support** + an external servlet container (WebSphere, Tomcat, …); mapping via `WEB-INF/web.xml` |
 
 ### Deployment on HCL Domino
 
-1. Copy the WAR **or** the JAR (**no** `web.xml` needed — the servlet class is loaded from the classpath and addressed by its class name) to the Java classpath configured in the server document, e.g. `<domino>/data/servlet/` — the classpath may point to a directory **or** directly to the JAR (e.g. `servlet/domino-mcp-servlet.jar`) — only **one** servlet definition per server (WAR **or** JAR)
+JAR and WAR deployments differ fundamentally in HCL Domino: the built-in
+**Domino Servlet Manager** loads servlet **classes** from the **Java servlet
+classpath** and addresses them by class name (or a `servlets.properties`
+alias) — it does **not** deploy standard WAR files (a WAR's classes live
+under `WEB-INF/classes/` and are invisible to the manager). Running a WAR
+requires switching the server document to **Third Party Servlet Support**
+and an external servlet container (e.g. WebSphere, Tomcat); the WAR's
+`WEB-INF/web.xml` then provides the mapping. The **JAR is therefore the
+native Domino deployment** and the recommended option.
+
+**Native deployment (recommended): the JAR**
+
+1. Copy `target/domino-mcp-servlet.jar` (no `web.xml` needed) to the Java
+   servlet classpath location configured in the server document, e.g.
+   `<domino>/data/servlet/` — the classpath field accepts a directory
+   **or** a JAR file directly (e.g. `servlet/domino-mcp-servlet.jar`)
 2. Server document *CN=Server* (open it in the Notes client — e.g. from the address book — or in the Administration Client → "Internet Protocols" tab → "Domino Web Server" → "Java Servlets" section):
-   - ☑ check **Java servlet support**
-   - **Java servlet classpath:** e.g. `servlet` (relative to the Domino data directory — the JAR/WAR is placed in this directory) **or** directly to the JAR file (e.g. `servlet/domino-mcp-servlet.jar`) — the path is freely configurable
+   - **Java servlet support:** `Domino Servlet Manager`
+   - **Java servlet classpath:** e.g. `servlet` (relative to the Domino data directory — the JAR is placed in this directory) **or** directly to the JAR file (e.g. `servlet/domino-mcp-servlet.jar`) — the path is freely configurable
    - **Java servlet path:** `/servlet`
-3. Restart the HTTP task: `tell http restart`
-4. Test the endpoint: `POST /servlet/DominoMcpServlet` with `initialize` (see above)
+3. Optional, `servlets.properties` in the Domino data directory: alias
+   (`servlet.Mcp.code=DominoMcpServlet` → URL `/servlet/Mcp`), init
+   parameters (`servlet.DominoMcpServlet.initArgs=mcpMaxPayloadBytes=10239999`),
+   load at startup (`servlets.startup=DominoMcpServlet`)
+4. Restart the HTTP task: `tell http restart`
+5. Test the endpoint: `POST /servlet/DominoMcpServlet` with `initialize` (see above)
+
+Only **one** servlet definition per server (native JAR **or** third-party
+WAR, not both).
 
 ### Versions & compatibility
 

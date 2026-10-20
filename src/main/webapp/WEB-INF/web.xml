@@ -17,6 +17,13 @@
         from the request.
     </description>
 
+    <!-- This web.xml only takes effect for the WAR deployment with
+         "Third Party Servlet Support" + an external servlet container
+         (e.g. WebSphere, Tomcat). The native JAR deployment (built-in
+         Domino Servlet Manager) does not read web.xml: the servlet is
+         addressed by its class name and configured via servlets.properties
+         in the Domino data directory. -->
+
     <!-- Servlet Definition -->
     <servlet>
         <servlet-name>DominoMcpServlet</servlet-name>
@@ -45,7 +52,8 @@
              Präzedenz vConfig > web.xml > Default). Grösser bei langsamen
              Agent-Aufrufen, z. B. get_design-Erst-Call (DXL-Export
              größerer Masken). Kommentar-Block = auskommentiert; zum
-             Aktivieren die <!-- ... --> entfernen. -->
+             Aktivieren die XML-Kommentar-Markierung um die
+             init-param-Blöcke entfernen. -->
         <!--
         <init-param>
             <param-name>mcpAgentTimeoutMs</param-name>
