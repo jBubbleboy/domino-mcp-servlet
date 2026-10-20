@@ -169,8 +169,10 @@
 
             <!-- Fat-JAR (Alternative zum WAR): Projekt-Klassen + Runtime-Dependencies
                  (jackson) in der JAR-Wurzel. Servlet-API (provided) und
-                 Test-Dependencies bleiben aussen. Deployment: JAR + web.xml in den
-                 Domino-Java-Classpath legen. -->
+                 Test-Dependencies bleiben aussen. Deployment: nur die JAR (ohne
+                 web.xml) in den Domino-Java-Classpath legen bzw. im Serverdokument
+                 den Classpath direkt auf die JAR zeigen; das Servlet wird über
+                 seinen Klassennamen aufgerufen (/servlet/DominoMcpServlet). -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>

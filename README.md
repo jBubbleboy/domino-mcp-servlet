@@ -34,8 +34,11 @@ Content-Type: application/json
 > - **WAR deployment:** the mapping is taken from the WAR's
 >   `WEB-INF/web.xml` (shipped with the default). Changing it requires
 >   editing `web.xml` and **rebuilding the WAR**.
-> - **JAR deployment:** the URL is freely chosen by the admin in the
->   `domino-web.xml` servlet registration — **no rebuild required**.
+> - **JAR deployment:** the servlet is addressed by its class name
+>   (`/servlet/DominoMcpServlet` — default package); any other URL can be
+>   registered as an alias via `servlets.properties` in the Domino data
+>   directory (e.g. `servlet.Mcp.code=DominoMcpServlet`) — **no rebuild
+>   required**.
 
 | Method | Behavior |
 |---|---|
@@ -113,14 +116,14 @@ Output:
 | Artifact | Deployment |
 |---|---|
 | `target/domino-mcp-servlet.war` | copy to `<domino>/data/servlet/` |
-| `target/domino-mcp-servlet.jar` | Alternative: JAR **and** `src/main/webapp/WEB-INF/web.xml` into the Domino Java classpath directory |
+| `target/domino-mcp-servlet.jar` | Alternative: the JAR **alone** (no `web.xml` needed) into the Domino Java classpath |
 
 ### Deployment on HCL Domino
 
-1. Copy the WAR (or JAR + `web.xml`) to the Java classpath directory configured in the server document, e.g. `<domino>/data/servlet/` — only **one** servlet definition per server (WAR **or** JAR)
+1. Copy the WAR **or** the JAR (**no** `web.xml` needed — the servlet class is loaded from the classpath and addressed by its class name) to the Java classpath configured in the server document, e.g. `<domino>/data/servlet/` — the classpath may point to a directory **or** directly to the JAR (e.g. `servlet/domino-mcp-servlet.jar`) — only **one** servlet definition per server (WAR **or** JAR)
 2. Server document *CN=Server* (open it in the Notes client — e.g. from the address book — or in the Administration Client → "Internet Protocols" tab → "Domino Web Server" → "Java Servlets" section):
    - ☑ check **Java servlet support**
-   - **Java servlet classpath:** e.g. `servlet` (relative to the Domino data directory; the JAR/WAR must be placed in this directory — the path is freely configurable)
+   - **Java servlet classpath:** e.g. `servlet` (relative to the Domino data directory — the JAR/WAR is placed in this directory) **or** directly to the JAR file (e.g. `servlet/domino-mcp-servlet.jar`) — the path is freely configurable
    - **Java servlet path:** `/servlet`
 3. Restart the HTTP task: `tell http restart`
 4. Test the endpoint: `POST /servlet/DominoMcpServlet` with `initialize` (see above)
