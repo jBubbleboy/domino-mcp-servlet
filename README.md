@@ -13,9 +13,9 @@ Notes API, and simply forwards everything to the LotusScript web agent
 | Component | Location | Role |
 |---|---|---|
 | **Domino MCP Servlet** (this repo) | GitHub | MCP protocol endpoint (JSON-RPC 2.0 over HTTP) |
-| **McpGateway** — web agent + ScriptLibs + `mcp_tools.nsf` | OpenNTF.org | Tool registry and tool implementations (LotusScript) |
+| **McpGateway** — web agent + ScriptLibs + `mcp_tools.nsf` | [OpenNTF.org](https://www.openntf.org/main.nsf/project.xsp?r=project/Domino%20MCP%20Toolkit) | Tool registry and tool implementations (LotusScript) |
 
-> **Prerequisite:** The Notes component **Domino MCP Toolkit** (OpenNTF)
+> **Prerequisite:** The Notes component **[Domino MCP Toolkit](https://www.openntf.org/main.nsf/project.xsp?r=project/Domino%20MCP%20Toolkit)** (OpenNTF)
 > must be installed on the **same Domino server**: the database
 > `mcp_tools.nsf` in the web root and the web agent `McpGateway`
 > (`?open` trigger). Without it, the servlet answers with the JSON-RPC

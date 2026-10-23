@@ -43,7 +43,7 @@ McpGateway web agent (LotusScript)
 
 ### 1.3 Known limitations (accepted)
 
-- **No HTTPS:** Basic-Auth travels in cleartext over the LAN (192.168.x.x). Mitigation: dedicated low-privilege IDs, internal LAN only, no internet exposure (see section 7).
+- **No HTTPS:** Basic-Auth travels in cleartext over the LAN (192.168.x.x). Mitigation: dedicated low-privilege IDs, internal LAN only, no internet exposure.
 - **Tool/resource/prompt lists** are cached 60 s in the servlet and are user-independent (metadata from `mcp_tools.nsf`, no user data) — a shared cache is acceptable.
 - `initialize` and `server/discover` remain anonymously reachable (they only expose server identity/capabilities, no data).
 - A password change requires a config update in the respective client.
@@ -339,18 +339,5 @@ The file is currently `644` (world-readable) and already contains LLM API keys. 
 | Correct credentials + Reader on target DB | Data is delivered |
 | Correct credentials, but no Reader/Author on target DB | Agent JSON `MCP_ACL` → MCP result `isError: true` |
 | `initialize` / `server/discover` without credentials | works (metadata, no user data) |
-
----
-
-## 7. Security risks and mitigation
-
-| Risk | Assessment / mitigation |
-|---|---|
-| Basic-Auth in cleartext (no HTTPS) | Dedicated low-privilege IDs; endpoint only in the trusted LAN (192.168.x.x); no public exposure. Long-term: TLS on the Domino HTTP task or a reverse proxy with TLS termination. |
-| Cleartext credentials in `opencode.json` | `chmod 600`; dedicated IDs with limited ACL; rotation on personnel change. |
-| Web agent runs under the server ID | **Required:** agent-side AccessLevel checks (section 4). Without them the per-user separation is ineffective — this is the central protection line. |
-| Shared tool-list cache (60 s) | Accepted: only metadata from `mcp_tools.nsf`, no user data. |
-| Spoofing: anonymous + foreign `Authorization` header | The servlet gate (`getRemoteUser() == null` → no forwarding) prevents an anonymous client from using foreign credentials against the internal agent call. |
-| Password reset on Domino | Client configs must be updated (per affected user). |
 
 
